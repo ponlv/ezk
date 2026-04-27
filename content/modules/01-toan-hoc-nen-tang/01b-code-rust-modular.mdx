@@ -1,0 +1,482 @@
+---
+order: 1.5
+title: "Code đi (1) — setup Rust và làm bài tập modular"
+description: "Hướng dẫn từ đầu — cài Rust, tạo project, implement từng hàm modular arithmetic ở bài 01. Dành cho người chưa từng viết Rust (như tôi từ Go qua)."
+date: "2026-04-29"
+tags: ["rust", "setup", "modular-arithmetic", "code"]
+draft: false
+---
+
+Bài [Số học modular](/modules/01-toan-hoc-nen-tang/01-so-hoc-modular)
+xong phần lý thuyết. Cuối bài có "Bài tập Rust" — một loạt hàm để
+implement. Nếu bạn chưa từng gõ Rust, code đó nhìn hơi sốc.
+
+Bài này dắt tay từng bước: từ `rustup install` đến `cargo test` xanh
+kín màn hình. Tôi viết cho người **chưa biết Rust** (như tôi từ Go
+qua) — sẽ có nhiều phép so sánh Go ↔ Rust dọc đường, kèm những chỗ
+tôi loay hoay một-hai tiếng vì compiler báo lỗi mà chưa kịp đọc kỹ.
+
+<Callout type="info" title="Mục tiêu cụ thể">
+Cuối bài này, bạn có một crate Rust tên `ezk-modular` chứa $5$ hàm
+core: `mod_add`, `mod_sub`, `mod_mul`, `mod_pow`, `mod_inv`. Tất cả
+đi kèm test, `cargo test` ra xanh hết.
+
+Đây cũng chính là **nền móng** cho bài 02 (Finite Field Fp) — ta sẽ
+gói $5$ hàm này vào struct `Fp` với operator overloading.
+</Callout>
+
+## Bước 1 — Cài Rust
+
+Cách chính thức là `rustup` (hơi giống `gvm` cho Go — quản lý nhiều
+phiên bản Rust trên máy):
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Theo prompts (chọn `1` cho default install). Restart shell, verify:
+
+```bash
+rustc --version    # rustc 1.8x.0
+cargo --version    # cargo 1.8x.0
+```
+
+`cargo` là Swiss army knife — gộp `go build` + `go test` + `go fmt` +
+`go mod` + ... vào một CLI duy nhất.
+
+## Bước 2 — Tạo project
+
+Ta tạo **library crate** (giống Go module nhưng chỉ có code library,
+không phải binary):
+
+```bash
+cargo new --lib ezk-modular
+cd ezk-modular
+```
+
+Cấu trúc tự sinh:
+
+```
+ezk-modular/
+├── Cargo.toml          # giống go.mod
+└── src/
+    └── lib.rs          # entry point
+```
+
+Mở `src/lib.rs`, **xóa nội dung mẫu**, thay bằng:
+
+```rust
+//! Modular arithmetic — bài tập số học modular từ blog ezk.
+
+pub mod modular;
+```
+
+Tạo file mới `src/modular.rs` — đây là nơi ta sẽ viết logic:
+
+```bash
+touch src/modular.rs
+```
+
+Giờ ta có structure tương đương Go:
+
+| Rust | Go tương đương |
+|---|---|
+| `Cargo.toml` | `go.mod` |
+| `src/lib.rs` (root) | `package main` (nhưng không phải binary) |
+| `pub mod modular;` | `import "./modular"` (kiểu) |
+| `src/modular.rs` | `modular/modular.go` |
+
+## Bước 3 — `mod_add`: phép cộng đầu tiên
+
+Mở `src/modular.rs`. Bắt đầu với phép cộng modular:
+
+```rust
+/// Tính (a + b) mod n.
+pub fn mod_add(a: u64, b: u64, n: u64) -> u64 {
+    let a = a % n;
+    let b = b % n;
+    (a + b) % n
+}
+```
+
+Đọc code này nếu bạn từ Go qua:
+
+| Rust | Tương đương Go |
+|---|---|
+| `pub fn` | function bắt đầu chữ hoa (`func ModAdd`) |
+| `a: u64` | `a uint64` |
+| `-> u64` | trả về `uint64` |
+| `let a = ...` | `a := ...` |
+| `a % n` | `a % n` (giống) |
+| Dòng cuối không có `;` | giá trị trả về (Rust expression-as-return) |
+
+**Vì sao có hai dòng `let a = a % n; let b = b % n;`?** Đây là
+**shadowing** — biến mới cùng tên đè biến cũ. Trong Go ta thường viết
+`a = a % n` (reassign). Rust default biến *immutable* — hoặc dùng
+`mut`, hoặc shadow như trên. Shadow là idiom Rust phổ biến hơn vì rõ
+ràng "tôi không sửa biến cũ, tạo biến mới cùng tên".
+
+**Vì sao reduce $a, b$ trước rồi mới cộng?** Để chắc không tràn `u64`.
+Sau khi `a % n` và `b % n`, mỗi cái $< n$, tổng $< 2n$. Với $n < 2^{63}$,
+$2n < 2^{64}$ → fit `u64`. Đây chính là justification của "đóng kín
+dưới phép cộng" ở section "Hai phép thần kỳ" của bài 01.
+
+### Test thử ngay
+
+Thêm cuối file `src/modular.rs`:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_mod_add_basic() {
+        assert_eq!(mod_add(5, 7, 12), 0);    // 5+7=12 ≡ 0
+        assert_eq!(mod_add(100, 50, 7), 3);  // 150 % 7 = 3
+    }
+}
+```
+
+Vài thứ mới:
+
+- `#[cfg(test)]` — attribute, nói compiler *"block này chỉ build khi
+  chạy test"*. Tương tự `_test.go` của Go nhưng để cùng file.
+- `mod tests` — đặt một sub-module tên `tests`. Test thường gom vào đây.
+- `use super::*;` — import mọi thứ từ scope cha. Bắt buộc, nếu không
+  test sẽ không thấy `mod_add`.
+- `#[test]` — đánh dấu function là test case.
+- `assert_eq!` — macro Rust. Nếu hai argument không bằng nhau, test fail.
+
+Chạy:
+
+```bash
+cargo test
+```
+
+Output:
+
+```
+running 1 test
+test modular::tests::test_mod_add_basic ... ok
+
+test result: ok. 1 passed
+```
+
+Một test xanh. Tiếp tục.
+
+## Bước 4 — `mod_sub`: bẫy underflow của u64
+
+Phép trừ trên `u64` có một bẫy: $5 - 7$ không ra $-2$. Trong **debug
+build** Rust panic, **release build** Rust silently wrap về $2^{64} - 2$.
+Cả hai đều không phải cái ta muốn.
+
+Cách đúng: kiểm trước khi trừ, nếu thiếu thì "đi vòng đồng hồ ngược":
+
+```rust
+/// Tính (a - b) mod n. Kết quả luôn trong [0, n).
+pub fn mod_sub(a: u64, b: u64, n: u64) -> u64 {
+    let a = a % n;
+    let b = b % n;
+    if a >= b {
+        a - b
+    } else {
+        n - (b - a)   // a < b: tính (b - a) trước rồi trừ ngược
+    }
+}
+```
+
+**Vì sao if-else?** Vì `u64` không thể âm. Nếu $a < b$, ta thay
+$a - b$ bằng $n - (b - a)$ — cùng đáp án trong modular vì
+$n - (b - a) \equiv -(b - a) \equiv a - b \pmod{n}$.
+
+Test:
+
+```rust
+#[test]
+fn test_mod_sub_no_underflow() {
+    assert_eq!(mod_sub(5, 7, 12), 10); // 5 - 7 ≡ 10 (mod 12)
+    assert_eq!(mod_sub(0, 1, 7), 6);   // 0 - 1 ≡ 6 (mod 7)
+    assert_eq!(mod_sub(7, 7, 7), 0);
+}
+```
+
+`cargo test` — 2 test xanh.
+
+## Bước 5 — `mod_mul`: bẫy overflow, fix bằng `u128`
+
+Đây là chỗ Rust user mới hay vấp. Code ngây thơ:
+
+```rust
+// SAI cho số to
+pub fn mod_mul_naive(a: u64, b: u64, n: u64) -> u64 {
+    (a * b) % n
+}
+```
+
+Compile được, chạy đúng cho đa số test. Nhưng:
+
+```rust
+let huge = mod_mul_naive(1u64 << 32, 1u64 << 32, 1_000_000_007);
+//   thread 'main' panicked at 'attempt to multiply with overflow'
+```
+
+$(1 \ll 32) \times (1 \ll 32) = 2^{64}$, vượt `u64::MAX`. Debug build
+panic, release silently wrap. **ZK production cực kỳ không** được phép
+sai im lặng.
+
+Fix: cast lên `u128` (16 bytes) trước khi nhân:
+
+```rust
+/// Tính (a * b) mod n. Dùng u128 trung gian để tránh tràn.
+pub fn mod_mul(a: u64, b: u64, n: u64) -> u64 {
+    ((a as u128 * b as u128) % n as u128) as u64
+}
+```
+
+`as` trong Rust là cast giữa numeric types — giống `uint128(x)` trong
+Go. Cast lên `u128` thì $a \times b$ tối đa $\approx 2^{128}$ — fit
+thoải mái. Sau khi `% n`, kết quả $< n < 2^{64}$, cast xuống `u64` an
+toàn không mất data.
+
+Test:
+
+```rust
+#[test]
+fn test_mod_mul_handles_overflow() {
+    let n: u64 = 1_000_000_007;
+    let a: u64 = 1 << 32;
+    let b: u64 = 1 << 32;
+    let expected = ((1u128 << 64) % n as u128) as u64;
+    assert_eq!(mod_mul(a, b, n), expected);
+}
+```
+
+## Bước 6 — `mod_pow`: square-and-multiply
+
+Đây là hàm "đắt giá" nhất — dùng trực tiếp lý thuyết
+square-and-multiply ở section "Phép lũy thừa nhanh" của bài 01:
+
+```rust
+/// base^exp mod n, dùng square-and-multiply, O(log exp) phép nhân.
+pub fn mod_pow(mut base: u64, mut exp: u64, n: u64) -> u64 {
+    if n == 1 { return 0; }   // edge case: mod 1, mọi số ≡ 0
+    let mut result: u64 = 1;
+    base %= n;
+    while exp > 0 {
+        if exp & 1 == 1 {                       // bit cuối = 1?
+            result = mod_mul(result, base, n);  // ghép vào kết quả
+        }
+        exp >>= 1;                               // đọc bit kế
+        base = mod_mul(base, base, n);          // bình phương cho vòng sau
+    }
+    result
+}
+```
+
+Vài thứ mới với người Go:
+
+| Rust | Giải thích |
+|---|---|
+| `mut base: u64` trong tham số | Rust default immutable. Đánh dấu `mut` để có thể reassign trong body. Tương tự Go nhận giá trị copy nhưng mặc định cho phép sửa. |
+| `let mut result` | declare biến local mutable |
+| `base %= n` | shorthand cho `base = base % n` (giống Go) |
+| `exp & 1` | bitwise AND, giống Go |
+| `exp >>= 1` | right shift in-place |
+| Cuối hàm `result` không có `;` | **expression-as-return**. Một biểu thức cuối block (không có `;`) chính là giá trị trả về. Khác Go phải explicit `return`. |
+
+Test với worked example từ bài 01:
+
+```rust
+#[test]
+fn test_mod_pow_basics() {
+    assert_eq!(mod_pow(2, 10, 1_000_000_007), 1024);
+    assert_eq!(mod_pow(3, 0, 7), 1);          // x^0 = 1
+    assert_eq!(mod_pow(0, 5, 7), 0);
+
+    // Worked example $3^{13} \bmod 17 = 12$ từ bài 01!
+    assert_eq!(mod_pow(3, 13, 17), 12);
+}
+```
+
+Test cuối nối thẳng với worked example $3^{13} \bmod 17 = 12$ ta đã
+tính tay ở bài lý thuyết. Lý thuyết và code chạm tay.
+
+## Bước 7 — `mod_inv`: nghịch đảo qua Fermat
+
+Có `mod_pow` rồi, `mod_inv` chỉ một dòng (dùng công thức $a^{-1} \equiv a^{p-2}$
+khi $p$ prime — section "Phép nghịch đảo" bài 01):
+
+```rust
+/// Nghịch đảo của a mod p, qua Fermat: a^(p-2).
+/// Yêu cầu: p prime, a != 0.
+pub fn mod_inv(a: u64, p: u64) -> u64 {
+    assert!(a != 0, "mod_inv: 0 không có nghịch đảo");
+    mod_pow(a, p - 2, p)
+}
+```
+
+`assert!` là macro Rust — runtime check, panic nếu false. Kèm message
+giải thích để debug nhanh.
+
+Test với worked example $5^{-1} \bmod 11 = 9$:
+
+```rust
+#[test]
+fn test_mod_inv_specific() {
+    // Worked example từ bài 01.
+    assert_eq!(mod_inv(5, 11), 9);
+    assert_eq!(mod_inv(4, 7), 2);   // 4*2 = 8 ≡ 1 (mod 7)
+}
+
+#[test]
+fn test_mod_inv_round_trip() {
+    let p = 1_000_000_007;
+    for a in 1..50u64 {
+        let inv = mod_inv(a, p);
+        // a * a^(-1) ≡ 1 (mod p)
+        assert_eq!(mod_mul(a, inv, p), 1, "fail at a={a}");
+    }
+}
+```
+
+`for a in 1..50u64` — Rust range syntax. `1..50` là half-open
+`[1, 50)` (giống `range(1, 50)` Python). Nếu muốn inclusive 1..=50.
+
+## Bước 8 — Verify Fermat trên 100 số
+
+Bài 3 mở rộng của bài 01 nói: *"verify Fermat trên 100 số ngẫu nhiên"*.
+Implement gọn:
+
+```rust
+#[test]
+fn test_fermat_holds_for_many_a() {
+    let p = 1_000_000_007u64;
+    for a in 1..100u64 {
+        // a^(p-1) ≡ 1 (mod p)
+        assert_eq!(mod_pow(a, p - 1, p), 1, "Fermat fail at a={a}");
+    }
+}
+```
+
+`cargo test` — xanh. Định lý đúng cho 99 số đầu (loại $a = 0$).
+
+## Bước 9 — Cấu trúc file cuối cùng
+
+`src/modular.rs` của bạn giờ trông như sau:
+
+```rust
+//! Modular arithmetic primitives.
+
+pub fn mod_add(a: u64, b: u64, n: u64) -> u64 {
+    let a = a % n;
+    let b = b % n;
+    (a + b) % n
+}
+
+pub fn mod_sub(a: u64, b: u64, n: u64) -> u64 {
+    let a = a % n;
+    let b = b % n;
+    if a >= b { a - b } else { n - (b - a) }
+}
+
+pub fn mod_mul(a: u64, b: u64, n: u64) -> u64 {
+    ((a as u128 * b as u128) % n as u128) as u64
+}
+
+pub fn mod_pow(mut base: u64, mut exp: u64, n: u64) -> u64 {
+    if n == 1 { return 0; }
+    let mut result: u64 = 1;
+    base %= n;
+    while exp > 0 {
+        if exp & 1 == 1 {
+            result = mod_mul(result, base, n);
+        }
+        exp >>= 1;
+        base = mod_mul(base, base, n);
+    }
+    result
+}
+
+pub fn mod_inv(a: u64, p: u64) -> u64 {
+    assert!(a != 0, "mod_inv: 0 không có nghịch đảo");
+    mod_pow(a, p - 2, p)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ... các #[test] ở các bước trên ...
+}
+```
+
+Khoảng 50 dòng code + 30 dòng test. Tất cả ZK module 1 cần ở mức field
+arithmetic 64-bit đã sẵn sàng.
+
+## Chạy `cargo test` lần cuối
+
+```bash
+cargo test
+```
+
+Output mong đợi:
+
+```
+running 7 tests
+test modular::tests::test_mod_add_basic           ... ok
+test modular::tests::test_mod_sub_no_underflow    ... ok
+test modular::tests::test_mod_mul_handles_overflow ... ok
+test modular::tests::test_mod_pow_basics          ... ok
+test modular::tests::test_mod_inv_specific        ... ok
+test modular::tests::test_mod_inv_round_trip      ... ok
+test modular::tests::test_fermat_holds_for_many_a ... ok
+
+test result: ok. 7 passed; 0 failed
+```
+
+7 dòng `ok` xanh. Mọi worked example từ bài 01 ($3^{13} \bmod 17 = 12$,
+$5^{-1} \bmod 11 = 9$, $a^{p-1} \equiv 1$ với prime 1B+7) đã được verify
+bằng code chạy thật.
+
+## Bẫy hay gặp khi từ Go qua Rust
+
+Vài thứ làm tôi mất 30 phút mỗi cái khi mới bắt đầu:
+
+- **Quên `mut`**: `let x = 5; x = 10;` — compiler reject. Phải
+  `let mut x = 5; x = 10;`.
+- **Implicit cast không tồn tại**: trong Go `var x uint64 = 5` (với `5`
+  là untyped int) chạy. Trong Rust `let x: u64 = 5i32;` → error. Phải
+  `5i32 as u64`.
+- **Quên `use super::*;` trong test module**: test sẽ báo "function not
+  found" mà mãi không hiểu vì sao.
+- **Nhầm panic vs return error**: `assert!` panic — KHÔNG phù hợp cho
+  library production. Trong code thật ta dùng `Result<T, E>`. Ở bài
+  này dùng `assert!` cho gọn, vì là code học.
+- **Quên `pub`**: nếu function không có `pub`, nó private trong module
+  → caller bên ngoài crate không thấy.
+
+## Tóm tắt
+
+Đã code lại **toàn bộ phần Rust của bài 01**:
+
+| Hàm | Concept ZK | Bẫy đã handle |
+|---|---|---|
+| `mod_add` | Đóng kín cộng | Reduce trước để khỏi tràn |
+| `mod_sub` | Đóng kín trừ | u64 underflow → if-else |
+| `mod_mul` | Đóng kín nhân | u64 overflow → cast u128 |
+| `mod_pow` | Square-and-multiply | Edge case `n=1` → return 0 |
+| `mod_inv` | Fermat $a^{-1} = a^{p-2}$ | Panic nếu `a == 0` |
+
+Mọi worked example từ bài 01 đã được test pass. Lý thuyết và code đã
+chạm tay nhau — nửa đường ZK đầu tiên xong.
+
+Bài tiếp theo trong roadmap: [Finite field Fp](/modules/01-toan-hoc-nen-tang/02-finite-field-fp).
+Khi bài 02 ra, tôi sẽ có thêm một bài "Code đi (2)" gói $5$ hàm này
+vào struct `Fp` với operator overloading — bạn sẽ viết được:
+
+```rust
+let a = Fp::new(7);
+let b = Fp::new(3);
+let c = a * b + b.inverse();   // gần giống công thức toán
+```
