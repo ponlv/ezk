@@ -1,0 +1,41 @@
+{
+  "order": 6,
+  "title": "Ứng dụng trong Blockchain",
+  "subtitle": "zk-Rollups, zkEVMs, zkVMs, privacy, identity",
+  "duration": "Ongoing",
+  "summary": "Đọc và hiểu các hệ thống thực tế. Hầu hết viết bằng Rust — đây là lúc Rust background trở thành lợi thế. Bao quát zk-Rollups (zkSync, StarkNet, Polygon, Scroll), zkEVMs theo phân loại của Vitalik, zkVMs (Risc Zero, SP1, Jolt), privacy (Aztec, Zcash, Penumbra), identity (Semaphore, Worldcoin, zkLogin).",
+  "topics": [
+    "zk-Rollups: zkSync Era, StarkNet, Polygon zkEVM, Scroll, Linea",
+    "zkEVMs: phân loại type 1-4 của Vitalik",
+    "zkVMs: Risc Zero, SP1, Jolt, Nexus",
+    "Privacy: Aztec, Zcash, Penumbra",
+    "Identity: Semaphore, Worldcoin, zkLogin"
+  ],
+  "tools": [
+    "zksync-era",
+    "stwo",
+    "scroll",
+    "risc0",
+    "sp1",
+    "jolt",
+    "noir"
+  ],
+  "resources": [
+    {
+      "title": "Awesome Zero Knowledge Proofs",
+      "url": "https://github.com/matter-labs/awesome-zero-knowledge-proofs"
+    },
+    {
+      "title": "ZK Hack workshops",
+      "url": "https://www.youtube.com/@zkhack",
+      "note": "nhiều labs Rust"
+    },
+    { "title": "0xPARC blog", "url": "https://0xparc.org/blog" },
+    { "title": "Vitalik's blog", "url": "https://vitalik.eth.limo/" },
+    {
+      "title": "a16z crypto research",
+      "url": "https://a16zcrypto.com/posts/",
+      "note": "Jolt, lasso, lookup arguments"
+    }
+  ]
+}

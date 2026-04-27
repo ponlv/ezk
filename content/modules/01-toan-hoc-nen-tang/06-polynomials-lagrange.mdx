@@ -1,0 +1,29 @@
+---
+order: 6
+title: "Đa thức và nội suy Lagrange — viên gạch của ZK"
+description: "Polynomial trên Fp, định lý cơ bản đại số (cho field), Lagrange interpolation, Schwartz-Zippel lemma — và vì sao 'commit polynomial = commit cả hàm' là idea xương sống của mọi SNARK hiện đại."
+date: "2026-05-03"
+tags: ["math", "polynomials", "lagrange", "schwartz-zippel", "rust"]
+draft: false
+---
+
+> Bài này đang được biên soạn. Phần dưới là outline — nội dung chi tiết
+> sẽ bổ sung sau.
+
+## Sẽ học gì trong bài này
+
+- **Đa thức trên field** — `F[X]` là vành, division with remainder,
+  bậc và biểu diễn theo coefficient.
+- **Định lý quan trọng: đa thức bậc d có tối đa d nghiệm** — chứng minh
+  qua factor `(X - r)`; hệ quả: hai đa thức bậc `d` trùng nhau tại
+  `d+1` điểm thì đồng nhất.
+- **Nội suy Lagrange** — công thức tường minh, basis polynomial `L_i(X)`,
+  chứng minh tồn tại + duy nhất.
+- **Schwartz-Zippel lemma** — `Pr[f(r) = 0] ≤ d/|F|`, biến verifier
+  "lười" thành catch được prover gian dối với xác suất cao.
+- **Vì sao polynomial commitment là 'magic'** — đặc tính cứng + DLP
+  hardness = commit nhỏ ràng buộc cả hàm; preview KZG.
+- **Tại sao ZK 'thoát' sang đa thức** — polynomial-IOP là intermediate
+  representation của mọi SNARK, FFT cho `O(n log n)`.
+- **Bài tập Rust** — struct `Poly` với coefficient vector, cộng/nhân,
+  Horner evaluation, Lagrange interpolation, vanishing polynomial.

@@ -1,0 +1,32 @@
+---
+order: 4
+title: "Elliptic curves — đường cong, hai điểm, và một quy tắc kỳ lạ"
+description: "Weierstrass form, phép cộng hình học, group law trên E(Fp), BN254 và BLS12-381 — và vì sao ECC thay thế Fp* trong mọi blockchain hiện đại."
+date: "2026-05-01"
+tags: ["math", "elliptic-curves", "ecc", "rust"]
+draft: false
+---
+
+> Bài này đang được biên soạn. Phần dưới là outline — nội dung chi tiết
+> sẽ bổ sung sau.
+
+## Sẽ học gì trong bài này
+
+- **Phương trình Weierstrass** — `y² = x³ + ax + b`, point at infinity 𝒪,
+  điều kiện không kỳ dị `4a³ + 27b² ≠ 0`.
+- **Phép cộng — quy tắc chord-and-tangent** — vẽ đường thẳng, lật qua
+  trục x; trường hợp `P = Q` (tangent), `P = -Q` (về 𝒪).
+- **Công thức đại số** — slope `λ`, công thức tính `(x₃, y₃)`, dẫn xuất
+  từ Vieta.
+- **E(F_p) là Abelian group** — bốn tiên đề, tính kết hợp khó nhất
+  (chứng minh đầy đủ phải qua divisor theory).
+- **Order của E(F_p) — định lý Hasse** — `|N - (p+1)| ≤ 2√p`,
+  Schoof's algorithm.
+- **Vì sao ECC thay thế F_p\* trong crypto** — không có index calculus,
+  cùng security với key size nhỏ hơn nhiều.
+- **Curves nổi tiếng** — secp256k1 (Bitcoin), Curve25519 (TLS), BN254
+  (Ethereum precompile), BLS12-381 (Zcash, Eth2).
+- **Bài tập Rust** — `enum Point { Infinity, Affine }`, phép cộng + tự
+  cộng, scalar multiplication qua double-and-add, test associativity.
+- **Vì sao đường cong này quan trọng cho ZK** — group law tốt hơn `F_p*`,
+  pairings, compactness của proof.

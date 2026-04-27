@@ -1,0 +1,34 @@
+{
+  "order": 2,
+  "title": "ZK Fundamentals",
+  "subtitle": "Sigma protocols, Schnorr, Pedersen, KZG, sumcheck",
+  "duration": "2-3 tuần",
+  "summary": "Hiểu ZK thực sự là gì: ba tính chất completeness/soundness/zero-knowledge, interactive vs non-interactive, Sigma protocols (Schnorr là điểm khởi đầu tuyệt vời), commitment schemes (Pedersen, KZG), và sumcheck protocol — viên gạch của nhiều SNARK hiện đại.",
+  "topics": [
+    "Ba tính chất: completeness, soundness, zero-knowledge",
+    "Interactive vs non-interactive proofs",
+    "Sigma protocols: Schnorr protocol từ A-Z",
+    "Commitment schemes: Pedersen và KZG",
+    "Sumcheck protocol"
+  ],
+  "tools": [
+    "ark-ff",
+    "ark-ec",
+    "ark-bn254",
+    "ark-bls12-381",
+    "ark-poly",
+    "merlin"
+  ],
+  "resources": [
+    {
+      "title": "Proofs, Arguments, and Zero-Knowledge (Justin Thaler)",
+      "url": "https://people.cs.georgetown.edu/jthaler/ProofsArgsAndZK.pdf",
+      "note": "free PDF — đọc chương 1-7"
+    },
+    {
+      "title": "arkworks r1cs-tutorial",
+      "url": "https://github.com/arkworks-rs/r1cs-tutorial",
+      "note": "Rust-specific examples"
+    }
+  ]
+}

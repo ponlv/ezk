@@ -1,0 +1,40 @@
+{
+  "name": "ezk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hành trình từ Zero đến Hero: Học ZKP và lập trình bằng Rust",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "github-slugger": "2.0.0",
+    "gray-matter": "4.0.3",
+    "next-mdx-remote": "5.0.0",
+    "rehype-pretty-code": "0.14.0",
+    "rehype-slug": "6.0.0",
+    "rehype-autolink-headings": "7.1.0",
+    "rehype-katex": "7.0.1",
+    "remark-gfm": "4.0.0",
+    "remark-math": "6.0.0",
+    "katex": "0.16.11",
+    "shiki": "1.22.0",
+    "reading-time": "1.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "0.5.15",
+    "@types/node": "22.9.0",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.49",
+    "tailwindcss": "3.4.15",
+    "typescript": "5.6.3"
+  }
+}

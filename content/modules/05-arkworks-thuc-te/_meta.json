@@ -1,0 +1,36 @@
+{
+  "order": 5,
+  "title": "Code thực tế với arkworks",
+  "subtitle": "ConstraintSynthesizer, gadgets, end-to-end zkSNARK",
+  "duration": "3-4 tuần",
+  "summary": "Sân nhà của Rust developer. arkworks là ZK framework lớn nhất Rust ecosystem, dùng bởi hàng trăm dự án production. Học API rồi build circuit cơ bản (Poseidon, Merkle, signature verification) và một zkSNARK end-to-end.",
+  "topics": [
+    "arkworks API: ConstraintSynthesizer trait, R1CSVar, witness vs public input",
+    "Circuit cơ bản: SHA-256 preimage, Poseidon, Merkle proof, EdDSA/ECDSA",
+    "Build zkSNARK end-to-end: private voting hoặc anonymous credentials",
+    "Bonus: halo2, plonky2, risc0/sp1, Circom + snarkjs"
+  ],
+  "tools": [
+    "arkworks",
+    "ark-groth16",
+    "ark-marlin",
+    "halo2_proofs",
+    "plonky2",
+    "risc0",
+    "sp1"
+  ],
+  "resources": [
+    {
+      "title": "arkworks-rs/r1cs-tutorial",
+      "url": "https://github.com/arkworks-rs/r1cs-tutorial"
+    },
+    {
+      "title": "arkworks-rs/groth16/examples",
+      "url": "https://github.com/arkworks-rs/groth16"
+    },
+    {
+      "title": "zcash/halo2 examples",
+      "url": "https://github.com/zcash/halo2"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+---
+order: 3
+title: "Group theory — đối xứng, vòng tròn, và bài toán logarit"
+description: "Group, cyclic group, generator, order, định lý Lagrange, và discrete log problem — bài toán mà mọi public-key crypto đều dựa vào để an toàn."
+date: "2026-04-30"
+tags: ["math", "group-theory", "discrete-log", "rust"]
+draft: false
+---
+
+> Bài này đang được biên soạn. Phần dưới là outline — nội dung chi tiết
+> sẽ bổ sung sau.
+
+## Sẽ học gì trong bài này
+
+- **Định nghĩa: group** — bốn tiên đề, group Abel, ví dụ `(Z, +)`,
+  `(F_p, +)`, `(F_p \ {0}, ·)`.
+- **Order — kích thước của group** — order của group vs order của một
+  phần tử.
+- **Generator và cyclic group** — `F_p*` luôn cyclic, vì sao đó là
+  cấu trúc đơn giản nhất ZK cần.
+- **Định lý Lagrange** — `|H|` chia hết `|G|`, hệ quả: chứng minh
+  Fermat đẹp gọn.
+- **Subgroup của prime order** — vì sao ZK ưa, Pohlig-Hellman attack,
+  small subgroup attack.
+- **Discrete Logarithm Problem (DLP)** — tính `g^x` dễ, ngược lại khó;
+  baby-step giant-step, Pollard's rho.
+- **Vì sao DLP cho ta zero-knowledge** — Schnorr identification skeleton,
+  intuition về soundness và zero-knowledge.
+- **Bài tập Rust** — tính order của phần tử, tìm generator, Schnorr toy
+  trên `F_p*`, baby-step giant-step.

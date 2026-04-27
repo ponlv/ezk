@@ -1,0 +1,23 @@
+---
+order: 2
+title: "Finite field Fp — sân chơi của Zero-Knowledge"
+description: "Field axioms, vì sao prime modulus tạo ra field, extended Euclidean để tính nghịch đảo, và một struct Fp Rust với toàn bộ operator overloading."
+date: "2026-04-29"
+tags: ["math", "finite-fields", "rust", "abstract-algebra"]
+draft: false
+---
+
+> Bài này đang được biên soạn. Phần dưới là outline — nội dung chi tiết
+> sẽ bổ sung sau.
+
+## Sẽ học gì trong bài này
+
+- **Định nghĩa: field** — chín tiên đề cộng/nhân, so sánh với Q, R.
+- **Z/pZ với p nguyên tố là field** — chứng minh qua định lý Bézout.
+- **Extended Euclidean** — cách thứ hai tìm nghịch đảo (so với Fermat).
+- **Ví dụ cụ thể: F₇** — bảng cộng, bảng nhân, đọc cấu trúc field.
+- **Vì sao ZKP cần Fp** — Z không đủ, R không đủ, chỉ Fp khớp.
+- **Bài tập Rust** — struct `Fp` với operator overloading (Add, Sub, Mul,
+  Div, Neg), Fermat vs Extended Euclidean, generic `Fp<const P: u64>`.
+- **Một góc nhìn về arkworks** — `ark-ff::Fp256<MontConfig>` build từ
+  cùng cấu trúc, thêm Montgomery form và batch inversion.

@@ -1,0 +1,1001 @@
+---
+order: 1
+title: "Số học modular — đồng hồ là chiếc chìa khóa"
+description: "Đi từ phép chia có dư của tiểu học đến số học trên đồng hồ — viên gạch đầu tiên của ZKP. Mỗi ký hiệu đều được giải thích, mỗi ví dụ đều tính tay từng bước."
+date: "2026-04-28"
+tags: ["math", "modular-arithmetic", "rust"]
+draft: false
+---
+
+Năm lớp 6 thầy giáo dạy đồng hồ. *"Bây giờ là 9 giờ sáng. Bốn tiếng nữa
+là mấy giờ?"* Cả lớp đáp: *"1 giờ chiều."* Thầy cười, nói thêm: *"Nếu
+hỏi bằng số thuần thì 9 + 4 = 13. Nhưng đồng hồ chỉ có 12 vạch nên ta
+bảo là 1. Đó là toán modular."*
+
+Lúc đó tôi nghe rồi cho qua. Mấy năm sau khi đụng vào ZK, tôi mới nhận
+ra: **toàn bộ Zero-Knowledge Proofs chạy trong một cái đồng hồ**. Chỉ
+khác là cái đồng hồ ấy có
+
+$$
+21\,888\,242\,871\,839\,275\,222\,246\,405\,745\,257\,275\,088\,548\,364\,400\,416\,034\,343\,698\,204\,186\,575\,808\,495\,617
+$$
+
+vạch — tức số nguyên tố $r$ của đường cong elliptic BN254 mà Ethereum
+dùng. Mọi phép cộng, nhân, mọi proof Groth16 bạn thấy on-chain đều
+xảy ra trên cái đồng hồ khổng lồ ấy.
+
+Bài này: ta học cách cái đồng hồ đó hoạt động.
+
+<Callout type="tip" title="Trước khi bắt đầu — cách đọc ký hiệu">
+Bài này có khá nhiều ký hiệu toán. Mỗi lần xuất hiện, tôi sẽ ghi rõ
+**đọc thế nào** và **nghĩa là gì**. Đừng skip mấy ô đó — nếu lướt qua,
+toàn bài sẽ thành chữ nghĩa rỗng.
+</Callout>
+
+## Phép chia có dư — bắt đầu từ tiểu học
+
+Lấy hai số nguyên dương, ví dụ $a = 17$ và $n = 5$. Chia $17$ cho $5$
+ta được:
+
+$$
+17 = 3 \times 5 + 2
+$$
+
+- $3$ là **thương**.
+- $2$ là **phần dư**.
+
+Phần dư luôn nằm trong khoảng $[0, n)$ — tức từ $0$ đến $n-1$. Với $n = 5$
+thì phần dư có thể là $0, 1, 2, 3, 4$, không bao giờ là $5$ trở lên.
+
+Ta viết phần dư là $17 \bmod 5 = 2$. Đọc: *"17 mod 5 bằng 2"*.
+
+**Vài ví dụ tự kiểm tra**:
+
+- $20 \bmod 5 = 0$ (vì $20 = 4 \times 5 + 0$).
+- $14 \bmod 5 = 4$ (vì $14 = 2 \times 5 + 4$).
+- $5 \bmod 5 = 0$.
+- $0 \bmod 5 = 0$.
+
+## Hai số "cùng một chỗ trên đồng hồ"
+
+Bây giờ điều thú vị: $17$ và $2$ có cùng phần dư khi chia cho $5$. Cả
+hai đều "rơi vào" vạch số $2$ trên đồng hồ 5 vạch.
+
+Tương tự:
+
+- $7$ và $12$ đều có phần dư $2$ khi chia cho $5$ (vì $7 = 1 \times 5 + 2$
+  và $12 = 2 \times 5 + 2$). Chúng "cùng vạch".
+- $3$ và $13$ và $-2$ đều rơi vào vạch $3$.
+
+Ta đặt tên cho quan hệ này:
+
+<Callout type="info" title="Định nghĩa: đồng dư">
+Hai số nguyên $a$ và $b$ được gọi là **đồng dư modulo $n$** nếu chúng có
+cùng phần dư khi chia cho $n$. Ta viết:
+
+$$
+a \equiv b \pmod{n}
+$$
+
+**Đọc**: *"a đồng dư b modulo n"*.
+
+**Ký hiệu**:
+- $\equiv$ (ba gạch ngang) — *"đồng dư với"*, KHÔNG phải dấu bằng thường.
+- $\pmod{n}$ — đọc là *"modulo n"*. Cho biết ta đang ở đồng hồ có $n$ vạch.
+</Callout>
+
+Ví dụ:
+- $17 \equiv 2 \pmod{5}$ (cùng vạch 2 trên đồng hồ 5).
+- $13 \equiv 3 \pmod{5}$ (cùng vạch 3).
+- $13 \equiv -2 \pmod{5}$ (vì $-2$ đi ngược 2 vạch từ 0 cũng tới đúng chỗ vạch 3).
+
+## Vì sao dùng $\equiv$ chứ không phải $=$?
+
+Câu hỏi tự nhiên: tại sao không viết $17 = 2$? Vì $17$ và $2$ rõ ràng
+**không bằng nhau** ở số học thường — chúng chỉ "cùng chỗ trên đồng hồ".
+Dấu $\equiv$ là cách ta nói: *"hai số này khác nhau, nhưng tương đương
+NẾU bạn chỉ quan tâm đồng hồ"*.
+
+Cách viết khác (tương đương): nếu $a \equiv b \pmod n$ thì hiệu $a - b$
+chia hết cho $n$. Ta viết:
+
+$$
+n \mid (a - b)
+$$
+
+**Đọc ký hiệu $\mid$**: *"n chia hết (a - b)"*, hoặc *"n là ước của (a - b)"*.
+Đây là ký hiệu "chia hết" trong toán học, KHÔNG phải dấu phép chia.
+
+Ví dụ: $17 \equiv 2 \pmod{5}$ vì $17 - 2 = 15$, mà $5 \mid 15$ (5 chia
+hết 15).
+
+<Callout type="tip" title="Tóm gọn ba cách nói cùng một thứ">
+Ba câu sau hoàn toàn tương đương:
+
+1. $a$ và $b$ có cùng phần dư khi chia cho $n$.
+2. $a \equiv b \pmod{n}$.
+3. $n \mid (a - b)$, tức $a - b$ chia hết cho $n$.
+
+Bạn sẽ gặp cả ba trong các paper. Nội dung như nhau — chỉ khác cách viết.
+</Callout>
+
+## Hai phép thần kỳ: cộng và nhân không sai
+
+Đây là tính chất quan trọng nhất. Hãy nhớ kỹ vì mọi thứ phía sau đều
+dựa vào nó.
+
+**Mệnh đề**: Nếu $a \equiv b \pmod{n}$ và $c \equiv d \pmod{n}$ thì:
+
+$$
+\begin{aligned}
+a + c &\equiv b + d \pmod{n} \\
+a \times c &\equiv b \times d \pmod{n}
+\end{aligned}
+$$
+
+Nói chữ: nếu hai cặp số "cùng vạch", thì tổng cùng vạch và tích cùng vạch.
+
+### Kiểm tra bằng ví dụ cụ thể
+
+Lấy $n = 7$. Chọn $a = 23$, $b = 2$ (đều ở vạch 2 vì $23 = 3 \times 7 + 2$).
+Chọn $c = 18$, $d = 4$ (đều ở vạch 4 vì $18 = 2 \times 7 + 4$).
+
+**Cộng**: $a + c = 23 + 18 = 41$, mà $41 = 5 \times 7 + 6$, nên $41$ ở
+vạch $6$. Đối chiếu: $b + d = 2 + 4 = 6$ — đúng vạch $6$. ✓
+
+**Nhân**: $a \times c = 23 \times 18 = 414$, mà $414 = 59 \times 7 + 1$,
+nên $414$ ở vạch $1$. Đối chiếu: $b \times d = 2 \times 4 = 8$, mà
+$8 = 1 \times 7 + 1$, nên $8$ ở vạch $1$. ✓
+
+### Vì sao quan trọng?
+
+Vì khi tính trên máy, ta thường có số rất to (vài trăm chữ số). Cộng
+hai số to → tràn bộ nhớ. Nhân hai số to → còn tệ hơn.
+
+Mệnh đề trên cho phép ta **giảm modulo bất cứ lúc nào**:
+
+$$
+(a + c) \bmod n = ((a \bmod n) + (c \bmod n)) \bmod n
+$$
+
+Tức là: thay vì cộng hai số to rồi mod, ta mod trước rồi cộng. Hai vế
+cho cùng kết quả, nhưng vế phải không bao giờ tràn (vì các số ban đầu
+đều nhỏ hơn $n$).
+
+### Chứng minh phép cộng (gọn)
+
+Theo giả thiết $a \equiv b$ và $c \equiv d \pmod{n}$, tồn tại số nguyên
+$k, l$ sao cho:
+
+$$
+a - b = kn, \qquad c - d = ln
+$$
+
+Cộng vế:
+
+$$
+(a + c) - (b + d) = (k + l) n
+$$
+
+Vế phải chia hết cho $n$, tức $(a + c) \equiv (b + d) \pmod{n}$. ✓
+
+Phép nhân chứng minh tương tự (chỉ thêm vài dòng đại số). Ai tò mò có
+thể xem chứng minh đầy đủ trong [Wikipedia: Modular
+arithmetic](https://en.wikipedia.org/wiki/Modular_arithmetic#Properties)
+— phần này không cần thiết để dùng được.
+
+## Phép lũy thừa nhanh — square-and-multiply
+
+Trong ZK ta thường phải tính $a^k \bmod p$ với $k$ cực lớn — vài trăm
+bit. Cách ngây thơ: nhân $a$ với chính nó $k$ lần. Với $k \approx
+2^{256}$, máy tính chạy đến hết tuổi vũ trụ chưa xong.
+
+Có cách nhanh hơn vô hạn lần. Nó dựa trên **hai mánh đơn giản** ghép
+lại — và đáng dành 10 phút để cảm cho rõ. Người mới thường vấp ở chỗ
+*"sao tự nhiên lại nghĩ ra được"* — thật ra hai mánh đứng riêng đều
+hiển nhiên, chỉ là khi ghép vào nhau ta mới có ma thuật.
+
+### Mánh 1 — Bình phương là cực rẻ
+
+Để biết $a^2$, ta nhân $a$ với chính nó — **một** phép nhân.
+
+Để biết $a^4 = (a^2)^2$: lấy $a^2$ vừa có, bình phương — **một** phép
+nhân nữa.
+
+Để biết $a^8 = (a^4)^2$: lại bình phương — **một** phép nữa.
+
+Mỗi phép bình phương **gấp đôi mũ**. Sau $10$ lần bình phương ta đã ở
+$a^{1024}$. Sau $256$ lần, $a^{2^{256}}$ — số to hơn số nguyên tử trong
+vũ trụ — chỉ tốn $256$ phép nhân.
+
+Tức là: **các lũy thừa "bậc hai" — $a^1, a^2, a^4, a^8, a^{16}, a^{32},
+\ldots$ — gần như miễn phí.**
+
+### Mánh 2 — Mọi mũ là tổng các lũy thừa của 2
+
+Đây chính là biểu diễn nhị phân ta học hồi trung học. Mỗi số nguyên
+dương viết được *duy nhất* dưới dạng tổng các lũy thừa của 2. Ví dụ:
+
+$$
+13 = 8 + 4 + 1 = 2^3 + 2^2 + 2^0
+$$
+
+Trong nhị phân: $13 = 1101_2$. Bit thứ $i$ (đếm từ phải, bắt đầu từ
+$i=0$) bằng $1$ nếu $2^i$ có mặt trong tổng:
+
+| Vị trí $i$ | 3 | 2 | 1 | 0 |
+|---|---|---|---|---|
+| $2^i$ | 8 | 4 | 2 | 1 |
+| Bit của 13 | **1** | **1** | 0 | **1** |
+| Có mặt trong tổng? | ✓ | ✓ | — | ✓ |
+
+### Ghép hai mánh
+
+Nếu $k = 2^{i_1} + 2^{i_2} + \ldots$ (theo nhị phân), thì luật mũ cho:
+
+$$
+a^k = a^{2^{i_1} + 2^{i_2} + \ldots} = a^{2^{i_1}} \cdot a^{2^{i_2}} \cdot \ldots
+$$
+
+Mỗi $a^{2^i}$ ta đã có sẵn nhờ Mánh 1 — gần như miễn phí. Việc còn lại
+chỉ là **nhân vài "miếng" được chọn** với nhau. Số "miếng" tối đa bằng
+số bit của $k$ — tức $\log_2 k$.
+
+### Ví dụ tính tay: $3^{13} \bmod 17$
+
+**Bước 1** — sinh các lũy thừa bậc hai của $3$ trong $\mathbb{F}_{17}$.
+Mỗi dòng là bình phương của dòng trên:
+
+| $i$ | $a^{2^i}$ | Tính | $\bmod 17$ |
+|---|---|---|---|
+| 0 | $3^1$ | $= 3$ | $3$ |
+| 1 | $3^2$ | $3 \cdot 3 = 9$ | $9$ |
+| 2 | $3^4$ | $9^2 = 81$ | $81 - 4 \cdot 17 = 13$ |
+| 3 | $3^8$ | $13^2 = 169$ | $169 - 9 \cdot 17 = 16$ |
+
+Bốn dòng = bốn phép bình phương.
+
+**Bước 2** — $13 = 8 + 4 + 1$. Theo công thức ghép, ta cần nhân ba
+"miếng" $3^8$, $3^4$, $3^1$ với nhau. Giá trị mỗi miếng đã có sẵn ở
+Bước 1 (cột $\bmod 17$): lần lượt là $16$, $13$, $3$.
+
+$$
+3^{13} \equiv \underbrace{3^8}_{=\,16} \cdot \underbrace{3^4}_{=\,13} \cdot \underbrace{3^1}_{=\,3} \pmod{17}
+$$
+
+Bây giờ nhân lần lượt **từ trái sang phải**, mỗi bước giảm modulo $17$
+nếu cần.
+
+**Nhân thứ nhất** — lấy hai miếng đầu, $16 \cdot 13$:
+
+$$
+16 \cdot 13 = 208
+$$
+
+Số $208$ vượt $17$, ta phải đưa về $[0, 17)$. Chia $208$ cho $17$:
+$208 = 12 \cdot 17 + 4$. Phần dư là $4$:
+
+$$
+208 \equiv 4 \pmod{17}
+$$
+
+**Nhân thứ hai** — lấy kết quả vừa có ($4$) nhân với miếng còn lại
+($3$):
+
+$$
+4 \cdot 3 = 12
+$$
+
+Lần này $12 < 17$ nên đã ở trong $[0, 17)$, không cần giảm thêm.
+
+Kết quả cuối: $\boxed{3^{13} \equiv 12 \pmod{17}}$.
+
+**Tổng phép nhân**: $4$ (bình phương ở Bước 1) + $2$ (nhân kết hợp ở
+Bước 2) = **6 phép**.
+
+So với cách ngây thơ ($3 \cdot 3 \cdot 3 \cdot \ldots$, $12$ phép): bằng
+một nửa. Có vẻ không nhiều — nhưng độ tiết kiệm tăng theo *log*:
+
+| Mũ $k$ | Naive | Square-and-multiply |
+|---|---|---|
+| $13$ | $12$ phép | $6$ phép |
+| $2^{32}$ | $\sim 4 \cdot 10^9$ phép | $32$ phép |
+| $2^{256}$ | không bao giờ | $\sim 512$ phép |
+
+Với $k = 2^{256}$ — kích thước thật trong ZK — khác biệt giữa *"tích
+tắc"* và *"vĩnh viễn không xong"*.
+
+### Code chạy thế nào — đọc bit từ phải sang trái
+
+Trong thực tế ta KHÔNG sinh bảng trước rồi nhân sau. Code làm hai việc
+**song song** trong một vòng lặp:
+
+- Sau mỗi vòng, biến `base` được bình phương → `base` = $a^{2^i}$ ở vòng $i$.
+- Đồng thời đọc bit cuối của `exp`. Nếu bit = 1 → nhân `base` vào `result`.
+- Dịch `exp` sang phải để vòng sau đọc bit kế tiếp.
+
+```
+mod_pow(base, exp, n):
+    result = 1
+    while exp > 0:
+        if (exp lẻ):                # bit cuối = 1?
+            result = result * base  # ghép a^(2^i) vào kết quả
+        base = base * base          # bình phương cho vòng sau
+        exp = exp >> 1              # dịch bit phải, đọc bit kế
+    return result
+```
+
+### Trace tính $3^{13} \bmod 17$ qua code
+
+Khởi tạo: `result = 1`, `base = 3`, `exp = 13` ($= 1101_2$).
+
+| Vòng | exp đầu | bit cuối | result sau | base sau | exp sau |
+|---|---|---|---|---|---|
+| 1 | $13$ | **1** | $1 \cdot 3 = 3$ | $3^2 = 9$ | $6$ |
+| 2 | $6$ | $0$ | (skip) $3$ | $9^2 = 81 \equiv 13$ | $3$ |
+| 3 | $3$ | **1** | $3 \cdot 13 = 39 \equiv 5$ | $13^2 \equiv 16$ | $1$ |
+| 4 | $1$ | **1** | $5 \cdot 16 = 80 \equiv 12$ | $16^2 \equiv 1$ | $0$ |
+
+Vòng 4 xong, `exp = 0`, loop kết thúc. **`result = 12`** — khớp với
+kết quả tính tay ở trên. ✓
+
+<Callout type="tip" title="Đọc cột 'bit cuối' từ trên xuống">
+$1, 0, 1, 1$ — chính là $13$ trong nhị phân **đọc ngược từ bit thấp
+lên bit cao** ($1101$ đọc ngược thành $1011$, tức bit-0 là 1, bit-1 là
+0, bit-2 là 1, bit-3 là 1). Loop xử lý bit thấp trước → bit cao sau,
+đúng 4 bit, đúng 4 vòng.
+</Callout>
+
+## Phép nghịch đảo (chia) — đào sâu
+
+Cộng, trừ, nhân, lũy thừa — bốn phép ta đã có. **Còn phép chia thì
+sao?** Trên đồng hồ, "chia" nghĩa là gì?
+
+Section này tôi sẽ cố đi thật chậm. Nếu bạn lướt qua mà không hiểu —
+đó là lỗi của tôi viết quá nhanh, không phải bạn đọc kém.
+
+### Khởi đầu: hồi tưởng phép chia ở trường
+
+Trong số học bình thường, làm phép $5 \div 4$ ta thường viết:
+
+$$
+5 \div 4 = 5 \times \tfrac{1}{4} = 5 \times 0.25 = 1.25
+$$
+
+Tức là: **chia cho $4$ = nhân với $\tfrac{1}{4}$**. Mà $\tfrac{1}{4}$ là
+"số đặc biệt" thoả tính chất *"nhân nó với 4 thì ra 1"*:
+
+$$
+4 \times \tfrac{1}{4} = 1
+$$
+
+$\tfrac{1}{4}$ chính là **nghịch đảo của $4$** trong số thực. Hễ có nó,
+ta luôn chia được.
+
+**Câu hỏi**: trên đồng hồ, ta có "$\tfrac{1}{4}$" không? Trên đồng hồ
+chỉ có số nguyên — không có $0.25$. Vậy *cái gì đóng vai trò $\tfrac{1}{4}$* trên đồng hồ?
+
+### Định nghĩa: số nhân với $a$ ra $1$ trên đồng hồ
+
+Trên đồng hồ $n$ vạch, **nghịch đảo của $a$** là số $b$ thoả:
+
+$$
+a \times b \equiv 1 \pmod{n}
+$$
+
+Tức là *"$a$ nhân $b$ ra $1$ trên đồng hồ"*. Ta ký hiệu $b = a^{-1}$.
+
+**Ví dụ trên đồng hồ 7** (tức $\mathbb{F}_7$):
+
+$$
+\begin{aligned}
+4 \times 2 &= 8 = 7 + 1 \equiv 1 \pmod 7 &&\Rightarrow\quad 4^{-1} = 2 \\
+3 \times 5 &= 15 = 2 \cdot 7 + 1 \equiv 1 \pmod 7 &&\Rightarrow\quad 3^{-1} = 5
+\end{aligned}
+$$
+
+Có nghịch đảo rồi, **chia cũng có**. Ví dụ tính $6 \div 4$ trên đồng hồ 7:
+
+$$
+6 \div 4 \;=\; 6 \times 4^{-1} \;=\; 6 \times 2 \;=\; 12 \equiv 5 \pmod 7
+$$
+
+Verify: nhân ngược lại, $5 \times 4 = 20 = 2 \cdot 7 + 6 \equiv 6 \pmod 7$. ✓
+
+Đúng là *"5 thì nhân với 4 ra 6"* — nên $6 \div 4 = 5$ trên đồng hồ 7.
+
+<Callout type="warn" title="Đừng nhầm $a^{-1}$ với $1/a$ phân số">
+$a^{-1}$ trên đồng hồ KHÔNG phải số thập phân. Trong $\mathbb{F}_7$,
+$4^{-1} = 2$ (một **số nguyên** trong $[1, 7)$), không phải $0.25$. Cú
+pháp ký hiệu mượn từ phân số, nhưng ý nghĩa khác hẳn: $a^{-1}$ chỉ là
+*"số mà nhân với $a$ ra $1$ trên đồng hồ"*.
+</Callout>
+
+### Cách đầu tiên — cứ thử lần lượt
+
+Với đồng hồ nhỏ, cách dễ nhất: thử $b = 1, 2, 3, \ldots$ đến khi gặp $b$
+thoả $a \times b \equiv 1$.
+
+**Ví dụ — tìm $5^{-1}$ trên đồng hồ 11**:
+
+Lập bảng nhân $5$ với từng số rồi mod $11$:
+
+| Thử $b$ | $5 \times b$ | mod 11 | Bằng $1$? |
+|---|---|---|---|
+| 1 | 5 | 5 | ✗ |
+| 2 | 10 | 10 | ✗ |
+| 3 | 15 | 4 | ✗ |
+| 4 | 20 | 9 | ✗ |
+| 5 | 25 | 3 | ✗ |
+| 6 | 30 | 8 | ✗ |
+| 7 | 35 | 2 | ✗ |
+| 8 | 40 | 7 | ✗ |
+| **9** | **45** | **1** | ✓ |
+
+Tìm thấy! $5^{-1} \equiv 9 \pmod{11}$.
+
+Kiểm chứng: $5 \times 9 = 45 = 4 \cdot 11 + 1$. Đúng dư 1. ✓
+
+**Vấn đề lớn**: cách này chỉ ổn cho đồng hồ nhỏ. Trên đồng hồ ZK
+($n \approx 2^{256}$ vạch), thử hết $b$ tốn $2^{256}$ lần — chạy đến
+hết tuổi vũ trụ chưa xong. Ta cần cách thông minh hơn (xem "Cách thứ
+hai" phía dưới).
+
+### Câu hỏi đáng sợ: nghịch đảo có *luôn* tồn tại không?
+
+Trước khi bàn cách tính nhanh, hãy hỏi câu cơ bản: *liệu nghịch đảo có
+chắc chắn tồn tại không?*
+
+**Tin xấu**: không phải lúc nào cũng có. Lấy ví dụ tìm $4^{-1}$ trên
+đồng hồ 12:
+
+| Thử $b$ | $4 \times b$ | mod 12 |
+|---|---|---|
+| 1 | 4 | 4 |
+| 2 | 8 | 8 |
+| 3 | 12 | **0** |
+| 4 | 16 | 4 |
+| 5 | 20 | 8 |
+| 6 | 24 | **0** |
+| ... | ... | ... |
+
+Bảng cứ lặp $4, 8, 0, 4, 8, 0, \ldots$ — **không bao giờ chạm $1$**.
+
+Vì sao? Vì $\gcd(4, 12) = 4$ — hai số có *ước chung* là $4$. Mọi tích
+$4 \times b$ đều là bội của $4$, mà $1$ không phải bội của $4$ (trên
+đồng hồ 12). Nên không tồn tại $b$ để $4b \equiv 1$.
+
+### Quy luật vàng
+
+> **Trên đồng hồ $n$, $a$ có nghịch đảo ⟺ $\gcd(a, n) = 1$**
+> (a và n không có ước chung khác 1, gọi là *coprime*).
+
+Hệ quả thực dụng:
+
+- **Đồng hồ prime $p$**: số $p$ chỉ có ước là $1$ và $p$. Nên với mọi
+  $a \in \{1, 2, \ldots, p-1\}$, $\gcd(a, p) = 1$ — tức **mọi $a$ khác
+  $0$ đều có nghịch đảo**. Đây chính là lý do ZK chọn modulus prime.
+- **Đồng hồ composite**: chỉ những $a$ coprime với $n$ mới có nghịch
+  đảo. Trên đồng hồ 12: chỉ $\{1, 5, 7, 11\}$ có (4 số coprime với 12).
+  Các số $\{2, 3, 4, 6, 8, 9, 10\}$ không.
+
+Tại sao quy luật này đúng? Có một định lý đẹp tên là **Bézout** — phần
+chứng minh để ở [box cuối section](#bezout-cho-người-tò-mò) cho ai muốn
+xem. Còn để dùng được nghịch đảo, bạn chỉ cần nhớ quy luật này.
+
+<Callout type="info" title="Số 0 không có nghịch đảo">
+$0 \times b = 0$ với mọi $b$. Không thể bằng $1$. Nên trong code,
+`mod_inv(0, n)` phải return error hoặc panic — đừng để nó silently sai.
+</Callout>
+
+### Cách thứ hai — dùng định lý Fermat (cách thực sự dùng trong ZK)
+
+Ở section sắp tới ("Định lý Fermat nhỏ"), ta sẽ chứng minh một định lý
+350 năm tuổi cho ra công thức gọn đến mức gần như là phép thuật:
+
+> **Khi $p$ là số nguyên tố và $a$ khác $0$**:
+>
+> $$ a^{-1} \equiv a^{p-2} \pmod{p} $$
+
+Đọc thẳng: *"Nghịch đảo của $a$ chính là $a$ mũ $(p-2)$"*.
+
+Tại sao công thức này đẹp? Vì **lũy thừa thì ta đã biết tính nhanh** —
+square-and-multiply, $O(\log p)$ phép nhân. Tức nghịch đảo của một số
+$256$-bit chỉ cần ~$500$ phép.
+
+**Tính lại $5^{-1} \bmod 11$ qua Fermat**:
+
+Cần tính $5^{11 - 2} = 5^9 \bmod 11$. Dùng đúng kỹ thuật square-and-multiply
+ở section trước:
+
+| $i$ | $5^{2^i}$ | Tính | mod 11 |
+|---|---|---|---|
+| 0 | $5^1$ | $= 5$ | $5$ |
+| 1 | $5^2$ | $5 \cdot 5 = 25$ | $3$ |
+| 2 | $5^4$ | $3^2 = 9$ | $9$ |
+| 3 | $5^8$ | $9^2 = 81 = 7 \cdot 11 + 4$ | $4$ |
+
+$9 = 8 + 1$, nên:
+
+$$
+5^9 = 5^8 \cdot 5^1 \equiv 4 \cdot 5 = 20 \equiv 9 \pmod{11}
+$$
+
+**Cùng kết quả với cách thử**: $5^{-1} = 9$. ✓
+
+Và đây là code Rust — chỉ **một dòng**:
+
+```rust
+fn mod_inv(a: u64, p: u64) -> u64 {
+    mod_pow(a, p - 2, p)   // chính là a^(p-2) mod p
+}
+```
+
+Trong ZK production gần như luôn dùng cách này. Modulus là prime, code
+gọn nhất, tốc độ nhanh nhất.
+
+### So sánh hai cách
+
+| | Cách 1: Thử lần lượt | Cách 2: Fermat |
+|---|---|---|
+| **Modulus** | bất kỳ | phải prime |
+| **Tốc độ** | $O(n)$ — chậm | $O(\log n)$ — cực nhanh |
+| **Code** | một loop | một dòng `mod_pow` |
+| **Khi dùng** | học, debug, đồng hồ nhỏ | ZK production (default) |
+
+Có cách thứ ba — **Extended Euclidean Algorithm** — chạy được cả khi
+modulus composite (cho RSA chẳng hạn), tốc độ tương đương Fermat. Nhưng
+trong ZK ta luôn có prime modulus → chỉ cần Fermat. Bỏ qua được.
+
+### Bezout cho người tò mò
+
+(Phần này có thể skip nếu bạn chỉ muốn dùng nghịch đảo. Đây là chứng
+minh tử tế cho "Quy luật vàng" ở trên.)
+
+**Định lý Bézout**: với mọi cặp số nguyên $a, n$ không cùng bằng $0$,
+**tồn tại** số nguyên $x, y$ thoả:
+
+$$
+a \cdot x + n \cdot y = \gcd(a, n)
+$$
+
+Đọc nôm: *gcd của hai số luôn viết được dưới dạng tổ hợp của chúng với
+hệ số nguyên (có thể âm)*.
+
+Ví dụ với $a = 5, n = 11$: $\gcd(5, 11) = 1$, và:
+
+$$
+1 = 11 \cdot 1 + 5 \cdot (-2) \quad \text{(thật vậy: } 11 - 10 = 1)
+$$
+
+Hệ số $x = -2, y = 1$.
+
+**Chiều thuận** ($\gcd(a, n) = 1$ ⟹ có nghịch đảo):
+
+Theo Bézout, có $x, y$ với $a x + n y = 1$. Lấy modulo $n$:
+
+$$
+a x + \underbrace{n y}_{\equiv 0 \pmod n} \equiv 1 \pmod{n}
+\quad \Longrightarrow \quad a x \equiv 1 \pmod{n}
+$$
+
+Vậy $x \bmod n$ là nghịch đảo của $a$. Ví dụ: $5^{-1} \equiv -2 \equiv 9
+\pmod{11}$ — đúng kết quả ta đã tính. ✓
+
+**Chiều ngược** ($\gcd(a, n) = d > 1$ ⟹ không có nghịch đảo):
+
+Mọi tích $a \times b$ đều là bội của $d$ (vì $a$ là bội của $d$). Số
+$1$ không phải bội của $d > 1$. Nên không thể có $a \times b = 1$ trên
+đồng hồ. ✓
+
+(Từ Bézout người ta xây được thuật toán **Extended Euclidean** tìm
+được $x, y$ cụ thể. Nó hoạt động cả khi $n$ không prime — đó là lý do
+RSA dùng. ZK ta dùng prime modulus và Fermat đủ rồi, nên skip chi tiết.)
+
+## Vạch khác nhau: prime vs composite
+
+Ở section nghịch đảo phía trên ta đã chứng minh: nghịch đảo tồn tại ⟺
+$\gcd(a, n) = 1$. Nhưng "tồn tại với mọi $a$ khác $0$" mới là điều ZK
+thực sự cần. Đó là chỗ phân biệt giữa modulus prime và composite.
+
+Hãy đặt cạnh nhau hai trường hợp để cảm rõ:
+
+### Ví dụ với $n = 12$ (composite — 12 = 2 × 2 × 3)
+
+Thử tìm nghịch đảo của $4$ trong đồng hồ 12:
+
+| $b$ | $4 \times b$ | $\bmod 12$ |
+|---|---|---|
+| 1 | 4 | 4 |
+| 2 | 8 | 8 |
+| 3 | 12 | **0** |
+| 4 | 16 | 4 |
+| 5 | 20 | 8 |
+| 6 | 24 | **0** |
+| ... | | |
+
+Không có $b$ nào để $4b \equiv 1$. Tệ hơn: $4 \times 3 \equiv 0$ trong
+đồng hồ 12 — tức là **hai số khác $0$ nhưng tích bằng $0$**. Đây gọi là
+*zero divisor*. Chỗ này ZK rất ghét vì nó phá nát nhiều tính chất cần
+dùng.
+
+### Ví dụ với $n = 7$ (prime)
+
+Thử tìm nghịch đảo của $4$:
+
+| $b$ | $4 \times b$ | $\bmod 7$ |
+|---|---|---|
+| 1 | 4 | 4 |
+| 2 | 8 | **1** ✓ |
+
+Tìm thấy: $4 \times 2 \equiv 1 \pmod{7}$, vậy nghịch đảo của $4$ là $2$.
+
+Thử thêm vài số khác:
+- $3 \times 5 = 15 = 2 \times 7 + 1 \Rightarrow 3^{-1} = 5$.
+- $6 \times 6 = 36 = 5 \times 7 + 1 \Rightarrow 6^{-1} = 6$ (tự nghịch đảo!).
+
+**Mọi số khác $0$ trong đồng hồ 7 đều có đúng một nghịch đảo.** Đây là
+tính chất "field" — cấu trúc tối thiểu để ZK chạy được.
+
+<Callout type="info" title="Quy tắc vàng">
+**Đồng hồ có $n$ vạch trở thành "field" khi và chỉ khi $n$ là số nguyên tố.**
+
+Đó là lý do mọi paper ZK đều bắt đầu bằng câu *"Let $p$ be a prime..."*
+Bài [Finite Field Fp](/modules/01-toan-hoc-nen-tang/02-finite-field-fp)
+sẽ chứng minh tử tế. Phần dưới đây là **năm lý do cụ thể** vì sao chọn
+prime — không phải chuyện "thầy bói" mà là từng failure mode của composite.
+</Callout>
+
+## Năm lý do ZK "cố chấp" với số nguyên tố
+
+Cho đến đây, ta đã thấy: với $n = 12$, có số không nghịch đảo được. Tưởng
+chỉ là "bất tiện" — thực ra đó là tảng băng nổi. Phần dưới: từng vấn đề
+cụ thể khi $n$ composite, và vì sao ZK cần nguyên tố.
+
+### Lý do 1 — Phép chia phải có nghiệm duy nhất
+
+Trong ZK, ta liên tục giải phương trình kiểu $a \cdot x \equiv b \pmod{n}$
+để tìm $x$. Ví dụ: prover ở Schnorr trả lời $z = r + c \cdot x$, verifier
+phải "trích" $x$ ngược ra trong proof of soundness.
+
+**Với $n = 12$ (composite)**: phương trình $4x \equiv 8 \pmod{12}$ có
+**bốn nghiệm**:
+
+| $x$ | $4x$ | $\bmod 12$ |
+|---|---|---|
+| 2 | 8 | 8 ✓ |
+| 5 | 20 | 8 ✓ |
+| 8 | 32 | 8 ✓ |
+| 11 | 44 | 8 ✓ |
+
+Bốn $x$ khác nhau cùng thoả. Nếu protocol cần "trích" $x$ ra, ta không
+biết là cái nào — *soundness vỡ*.
+
+**Với $n = 7$ (prime)**: phương trình $4x \equiv 8 \pmod{7}$ có **đúng
+một nghiệm**:
+
+$$
+x = 4^{-1} \cdot 8 \equiv 2 \cdot 8 \equiv 16 \equiv 2 \pmod{7}
+$$
+
+Mọi $a \neq 0$ đều có nghịch đảo duy nhất, nên mọi phương trình tuyến
+tính đều giải duy nhất. Đó là điều kiện tối thiểu để ZK protocol "trích"
+được witness.
+
+### Lý do 2 — Luật triệt tiêu (cancellation law) phải đúng
+
+Trong số học thường, $a \cdot b = a \cdot c$ với $a \neq 0$ thì $b = c$.
+Đây là một *fact* tưởng như hiển nhiên — nhưng nó là nền tảng của hầu
+hết chứng minh đại số.
+
+**Với $n = 12$**: luật này VỠ.
+
+$$
+4 \cdot 1 = 4, \quad 4 \cdot 4 = 16 \equiv 4 \pmod{12}
+$$
+
+Vậy $4 \cdot 1 \equiv 4 \cdot 4 \pmod{12}$ nhưng $1 \neq 4$. Không thể
+"chia hai vế cho 4" — chia không hợp pháp.
+
+**Với $n = 7$**: luật triệt tiêu luôn đúng. Lý do: nếu $a \cdot b \equiv
+a \cdot c \pmod{p}$ và $a \neq 0$, ta nhân hai vế với $a^{-1}$:
+
+$$
+a^{-1} \cdot a \cdot b \equiv a^{-1} \cdot a \cdot c \pmod{p}
+\quad \Longrightarrow \quad b \equiv c \pmod{p}
+$$
+
+Bước "nhân $a^{-1}$" chỉ làm được nếu $a^{-1}$ tồn tại — và như đã thấy,
+chỉ có với prime modulus.
+
+Hệ quả: hầu như mọi chứng minh đại số trong ZK paper (Schwartz-Zippel,
+Lagrange interpolation, KZG opening, ...) đều dựa vào cancellation. Bỏ
+prime, mọi proof đổ vỡ dây chuyền.
+
+### Lý do 3 — Nhóm nhân là cyclic, có generator
+
+Lesson 03 sẽ đào sâu, nhưng tóm: tập $\{1, 2, \ldots, p-1\}$ với phép
+nhân modulo $p$ luôn có một phần tử $g$ "sinh ra mọi phần tử khác":
+
+$$
+\{g^0, g^1, g^2, \ldots, g^{p-2}\} = \{1, 2, \ldots, p-1\}
+$$
+
+Phần tử $g$ gọi là **generator**. Schnorr signature, ElGamal, Diffie-Hellman,
+KZG — toàn bộ cần một generator để hoạt động.
+
+**Với $p = 7$**: $g = 3$ là generator. Kiểm tra:
+
+$$
+3^1=3,\; 3^2=2,\; 3^3=6,\; 3^4=4,\; 3^5=5,\; 3^6=1 \pmod{7}
+$$
+
+Sáu lũy thừa khác nhau, lấp đầy $\{1, 2, 3, 4, 5, 6\}$. ✓
+
+**Với $n = 8$ (composite)**: nhóm nhân là $\{1, 3, 5, 7\}$ (chỉ những số
+coprime với 8). Thử mọi phần tử làm "generator":
+
+$$
+\begin{aligned}
+3^1 = 3, \quad 3^2 = 9 \equiv 1 \pmod 8 \quad &\Longrightarrow \text{order = 2} \\
+5^1 = 5, \quad 5^2 = 25 \equiv 1 \pmod 8 \quad &\Longrightarrow \text{order = 2} \\
+7^1 = 7, \quad 7^2 = 49 \equiv 1 \pmod 8 \quad &\Longrightarrow \text{order = 2}
+\end{aligned}
+$$
+
+Mọi phần tử đều có order 2, **không có generator nào** sinh ra cả 4 phần
+tử. Nhóm này không cyclic — Schnorr không chạy được trên nó.
+
+### Lý do 4 — Discrete Log phải KHÓ (vấn đề an ninh)
+
+ZK security dựa vào việc *Discrete Logarithm Problem* (DLP) khó: cho
+$g$ và $h = g^x$, tìm $x$ phải tốn cỡ $2^{128}$ phép trở lên.
+
+**Trên nhóm có order chứa thừa số nhỏ** (xảy ra khi modulus composite,
+hoặc prime modulus nhưng không chọn subgroup đúng): có thuật toán
+**Pohlig-Hellman** giải DLP nhanh kinh khủng.
+
+Pohlig-Hellman làm gì: nếu $|G| = q_1 \cdot q_2 \cdot \ldots \cdot q_k$
+với các $q_i$ là số nguyên tố, thuật toán chia DLP gốc thành $k$ DLP
+nhỏ, mỗi cái trên nhóm order $q_i$. Time complexity:
+
+$$
+O\left(\sum_{i=1}^{k} \sqrt{q_i}\right)
+$$
+
+So với $O(\sqrt{|G|})$ của brute force. Nếu $|G|$ có thừa số nguyên tố
+nhỏ (vd $|G| = 2^{100}$), Pohlig-Hellman chỉ tốn $O(100 \cdot \sqrt{2})$
+— *vỡ trận*.
+
+**Để DLP an toàn**: ta cần $|G|$ là số nguyên tố lớn (hoặc ít nhất có
+một thừa số nguyên tố lớn $\geq 2^{256}$). Đó là lý do prime modulus —
+prime → multiplicative group cyclic order $p-1$, từ đó ta lọc tiếp ra
+**subgroup prime order** để dùng (xem Lý do 5).
+
+### Lý do 5 — Vẫn chưa đủ: cần subgroup prime-order
+
+Nghiệt ngã hơn: **chỉ chọn $p$ prime thôi vẫn chưa đủ**. Vì $p$ là prime
+lẻ, $p - 1$ luôn chẵn — tức luôn có thừa số 2. Nếu ta dùng cả nhóm
+$\mathbb{F}_p^*$ order $p-1$, Pohlig-Hellman vẫn có chỗ tấn công.
+
+Giải pháp: chọn $p$ sao cho $p - 1 = 2 \cdot q$ với $q$ là prime lớn
+(gọi là **safe prime**). Rồi chỉ làm việc trong subgroup order $q$.
+
+Hoặc với elliptic curve: chọn curve có $|E(\mathbb{F}_p)| = h \cdot r$
+với $r$ prime lớn, $h$ là *cofactor* nhỏ (thường $h \in \{1, 2, 4, 8\}$).
+Subgroup prime order $r$ chính là nơi mọi protocol thực sự chạy.
+
+**Ví dụ thật**:
+- **BN254**: base field prime $p \approx 2^{254}$, scalar prime $r \approx 2^{254}$
+  ($r$ chia hết $|E(\mathbb{F}_p)|$).
+- **BLS12-381**: $p \approx 2^{381}$, $r \approx 2^{255}$.
+
+Hai prime, không phải một. ZK paper hay viết câu *"Let $\mathbb{F}_p$ be
+the base field and $\mathbb{F}_r$ the scalar field..."* — chính là lý do
+này.
+
+<Callout type="tip" title="Tóm 5 lý do trong một câu">
+Prime modulus là điều kiện **tối thiểu** để có:
+**(1)** chia duy nhất nghiệm,
+**(2)** triệt tiêu hợp lệ,
+**(3)** nhóm nhân có generator,
+**(4)** DLP còn cơ hội an toàn,
+**(5)** subgroup prime order để chốt security cuối cùng.
+
+Composite modulus phá *cả năm*. Đó là lý do không có ZK paper nào dùng
+$n = 12$ hay $n = 100$ làm modulus — kể cả cho ví dụ giáo dục.
+</Callout>
+
+## Định lý Fermat nhỏ — ngắn nhưng cực mạnh
+
+**Phát biểu**: Nếu $p$ là số nguyên tố và $a$ không chia hết cho $p$
+(tức $\gcd(a, p) = 1$) thì:
+
+$$
+a^{p-1} \equiv 1 \pmod{p}
+$$
+
+**Đọc ký hiệu $\gcd$**: *"greatest common divisor"* — ước chung lớn nhất.
+$\gcd(a, p) = 1$ nghĩa là $a$ và $p$ không có ước chung khác $1$.
+
+### Ví dụ kiểm tra
+
+Lấy $p = 7$. Theo định lý, mọi $a \in \{1, 2, 3, 4, 5, 6\}$ đều phải
+thoả $a^6 \equiv 1 \pmod{7}$. Kiểm tra:
+
+| $a$ | $a^6$ | $\bmod 7$ |
+|---|---|---|
+| 1 | 1 | 1 ✓ |
+| 2 | 64 | 1 ✓ |
+| 3 | 729 | 1 ✓ |
+| 4 | 4096 | 1 ✓ |
+| 5 | 15625 | 1 ✓ |
+| 6 | 46656 | 1 ✓ |
+
+Tất cả ra $1$. Định lý đúng.
+
+### Hệ quả: chứng minh được công thức $a^{-1} = a^{p-2}$
+
+Section "Phép nghịch đảo" phía trên đã *dùng* công thức này — giờ ta có
+chứng minh tử tế:
+
+Nhân hai vế của Fermat với $a^{-1}$ (tồn tại vì $\gcd(a, p) = 1$):
+
+$$
+a^{p-1} \equiv 1
+\quad\Longrightarrow\quad
+a^{p-2} \cdot a \equiv 1
+\quad\Longrightarrow\quad
+a^{-1} \equiv a^{p-2} \pmod{p}
+$$
+
+Vậy mỗi lần ZK code chạy `mod_pow(a, p - 2, p)`, đó là Fermat đứng đằng
+sau. Một dòng code, một định lý 350 năm tuổi.
+
+(Chứng minh chính định lý Fermat đẹp nhất qua group theory — sẽ gặp ở
+[bài 03](/modules/01-toan-hoc-nen-tang/03-group-theory). Tạm gác lại,
+dùng nó trước.)
+
+## Bài tập Rust
+
+Implement modular arithmetic trên `u64`. Cẩn thận overflow — đó là cái
+bẫy số một của người mới.
+
+### Bài 1 — Bốn phép toán cơ bản
+
+Tạo file `src/modular.rs`:
+
+```rust
+/// (a + b) mod n
+pub fn mod_add(a: u64, b: u64, n: u64) -> u64 {
+    let a = a % n;
+    let b = b % n;
+    // Với n ≤ 2^63, (a + b) < 2n ≤ 2^64 nên không tràn u64
+    (a + b) % n
+}
+
+/// (a - b) mod n, kết quả luôn nằm trong [0, n)
+pub fn mod_sub(a: u64, b: u64, n: u64) -> u64 {
+    let a = a % n;
+    let b = b % n;
+    if a >= b { a - b } else { n - (b - a) }
+}
+
+/// (a * b) mod n. Dùng u128 để tránh tràn khi a*b vượt 2^64.
+pub fn mod_mul(a: u64, b: u64, n: u64) -> u64 {
+    ((a as u128 * b as u128) % n as u128) as u64
+}
+
+/// base^exp mod n, square-and-multiply.
+pub fn mod_pow(mut base: u64, mut exp: u64, n: u64) -> u64 {
+    if n == 1 { return 0; }
+    let mut result = 1u64;
+    base %= n;
+    while exp > 0 {
+        if exp & 1 == 1 {
+            result = mod_mul(result, base, n);
+        }
+        exp >>= 1;
+        base = mod_mul(base, base, n);
+    }
+    result
+}
+
+/// Nghịch đảo của a mod p, dùng Fermat: a^(p-2).
+/// Yêu cầu: p là số nguyên tố và a không chia hết cho p.
+pub fn mod_inv(a: u64, p: u64) -> u64 {
+    mod_pow(a, p - 2, p)
+}
+```
+
+### Bài 2 — Test
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const P: u64 = 1_000_000_007; // prime nhỏ, đủ cho test
+
+    #[test]
+    fn test_add_wrap() {
+        assert_eq!(mod_add(5, 7, 12), 0);          // 12 mod 12 = 0
+        assert_eq!(mod_add(P - 1, 1, P), 0);
+        assert_eq!(mod_add(P - 1, P - 1, P), P - 2);
+    }
+
+    #[test]
+    fn test_sub_no_underflow() {
+        assert_eq!(mod_sub(5, 7, 12), 10);  // 5 - 7 ≡ 10 (mod 12)
+        assert_eq!(mod_sub(0, 1, P), P - 1);
+    }
+
+    #[test]
+    fn test_mul_no_overflow() {
+        // 2^32 * 2^32 = 2^64, sẽ tràn u64 nếu không dùng u128
+        let a = 1u64 << 32;
+        let b = 1u64 << 32;
+        let expected = ((1u128 << 64) % P as u128) as u64;
+        assert_eq!(mod_mul(a, b, P), expected);
+    }
+
+    #[test]
+    fn test_pow() {
+        assert_eq!(mod_pow(2, 10, P), 1024);
+        assert_eq!(mod_pow(3, 0, P), 1);
+        assert_eq!(mod_pow(0, 5, P), 0);
+    }
+
+    /// Verify Fermat: a^(p-1) ≡ 1 với mọi a ∈ [1, p)
+    #[test]
+    fn test_fermat() {
+        for a in 1..20u64 {
+            assert_eq!(mod_pow(a, P - 1, P), 1, "Fermat fail at a={a}");
+        }
+    }
+
+    /// a * a^(-1) ≡ 1
+    #[test]
+    fn test_inverse_round_trip() {
+        for a in 1..20u64 {
+            let inv = mod_inv(a, P);
+            assert_eq!(mod_mul(a, inv, P), 1);
+        }
+    }
+}
+```
+
+Chạy `cargo test`. Tất cả phải xanh.
+
+### Bài 3 — Mở rộng
+
+1. Viết `mod_neg(a, n)` trả về $-a \bmod n$. Verify
+   $\text{mod\_add}(a, \text{mod\_neg}(a, n), n) = 0$.
+2. Implement **Euler's criterion**: kiểm tra $a$ có là số chính phương
+   modulo $p$ không bằng cách tính $a^{(p-1)/2} \bmod p$. Nếu kết quả là
+   $1$ thì có; nếu là $p - 1$ thì không.
+3. Lập trình **Sieve of Eratosthenes** sinh tất cả số nguyên tố nhỏ hơn
+   $n$. Chọn random một prime trong đó, verify Fermat trên 100 số $a$
+   ngẫu nhiên.
+
+<Callout type="warn" title="Cẩn thận với u64">
+`u64` chỉ chứa được prime đến khoảng $2^{63}$. Cho production ZK ta
+cần prime $\sim 256$-bit. Bài tiếp theo sẽ giới thiệu
+`num_bigint::BigUint` cho điều đó. Tạm thời cứ dùng `u64` để tập trung
+vào logic.
+</Callout>
+
+## Tóm tắt — đọc 1 phút
+
+- $a \equiv b \pmod{n}$ nghĩa là $a$ và $b$ cùng phần dư khi chia $n$.
+- Đồng dư là quan hệ tương đương: phản xạ, đối xứng, bắc cầu.
+- **Đóng kín dưới $+$ và $\times$** — mod giữa chừng không sai kết quả.
+- **Modulus prime** ⟹ mọi số khác $0$ có nghịch đảo ⟹ ta có "field" ⟹
+  ZK chạy được.
+- **Square-and-multiply** tính $a^k$ trong $O(\log k)$ phép.
+- **Fermat**: $a^{p-1} \equiv 1 \pmod{p}$. Hệ quả: $a^{-1} = a^{p-2}$.
+
+Bài sau ta gọi đúng tên cấu trúc Z/pZ này: **Finite Field $\mathbb{F}_p$**.
+Ta sẽ gói nó vào struct Rust với operator overloading, và bắt đầu cảm
+được vì sao mọi paper ZK đều bắt đầu bằng *"Let $\mathbb{F}$ be a finite
+field of prime order $p$..."*.

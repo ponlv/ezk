@@ -1,0 +1,130 @@
+---
+order: 0
+title: "Bắt đầu từ đâu — và vì sao tôi viết blog này"
+description: "Tôi học ZKP nhiều lần, bỏ giữa chừng nhiều lần. Lần này tôi quyết định viết lại từ đầu — chậm, công khai, với Rust."
+date: "2026-04-27"
+tags: ["meta", "roadmap"]
+draft: false
+---
+
+Tôi nhớ đó là buổi tối Barry WhiteHat lần đầu về Việt Nam. Một meetup nhỏ
+ở Hồ Chí Minh — ngoài cửa kính trời mưa lất phất, phòng họp chật, sặc mùi cà
+phê và pizza nguội. Barry đeo balô, đứng cạnh bảng trắng, nói chuyện kiểu
+rất "không sân khấu" — tay chỉ chỉ, vẽ vẽ, thỉnh thoảng bật cười tự đùa.
+Trước đó tên anh với tôi mới chỉ là một dòng author trên paper zkSync,
+một avatar trên các issue Ethereum Research. Hôm ấy anh đứng ngay trước
+mặt, gần đến mức tôi nhìn rõ logo trên áo phông.
+
+Anh viết lên bảng đúng một biểu thức:
+
+```
+g^x = h
+```
+
+Rồi quay xuống dưới, hỏi nhẹ tênh: *"What does this really prove?"*
+
+Tôi ngồi đó, mở laptop, và nhận ra mình *không trả lời được*. Tôi đã đọc
+qua Vitalik, đã lướt paper Groth16, đã cài Circom rồi gỡ. Tôi nói được
+ra mấy chữ "prover", "verifier", "soundness" — như đọc thuộc bài. Nhưng
+câu hỏi nguyên sơ kia — *"Biểu thức này thực sự đang chứng minh điều
+gì?"* — tôi không có câu trả lời thật. Tôi có một mớ từ vựng mà không
+có một mạch hiểu.
+
+Tệ hơn: trước buổi tối ấy, tôi đã thử học ZKP nhiều lần rồi. Đọc, copy
+code, chạy demo, gật gù. Mỗi lần đều bỏ giữa chừng ở một chỗ khác nhau,
+nhưng lý do thì giống hệt: **tôi đang lặp lại từ ngữ mà không hiểu chúng
+nói về điều gì**. Và tệ nữa — tôi giả vờ rằng mình hiểu.
+
+Tối đó về phòng trọ, tôi mở lại Wikipedia "Schnorr signature" lần thứ
+không-nhớ-nổi. Và lần này, thay vì lướt qua mấy ký hiệu để tìm phần code
+example, tôi dừng lại ở dòng đầu tiên: *"Let G be a cyclic group of
+prime order q with generator g..."* Tôi nhận ra mình *không biết*
+"cyclic" là gì, *không biết* "prime order" nghĩa là sao, và càng không
+biết vì sao phải có "generator". Tôi đã đi qua những chữ ấy hàng chục
+lần mà không một lần dừng lại.
+
+Lần này tôi quyết định khác. Lần này tôi viết.
+
+## Vì sao phải viết
+
+Tôi tin một điều đơn giản: nếu tôi không thể giải thích nó cho ai đó, tức
+là tôi chưa hiểu. Blog này là cái gậy đập vào lưng chính tôi mỗi tuần —
+buộc tôi phải đặt ngón tay xuống bàn phím, gõ ra từng câu, và phát hiện
+chính xác chỗ nào tôi đang giả vờ hiểu.
+
+Bạn đang đọc nó như một cuốn sổ tay người học. Có chỗ tôi sẽ sai. Có chỗ
+tôi sẽ viết lại. Có chỗ tôi sẽ thừa nhận: *"Tôi đã loay hoay ở đây ba
+ngày."* Tôi nghĩ điều đó còn giá trị hơn một bài viết bóng bẩy mà giấu
+nhẹm những đoạn vấp.
+
+## Vì sao Rust thay vì Circom
+
+Phần lớn tutorial ZK trên mạng đi thẳng qua Circom + snarkjs vì hệ Solidity.
+Đó là con đường ngắn nếu mục tiêu cuối cùng là deploy verifier lên
+Ethereum. Nhưng với tôi, mục tiêu là **hiểu** — và Rust ecosystem cho phép
+đào sâu hơn nhiều:
+
+- `arkworks` cho phép viết circuit ở mức R1CS gadget, không bị che bởi DSL.
+- `halo2` để chạm vào recursive proofs và lookup arguments.
+- `plonky3`, `winterfell` để cảm được STARKs / FRI từ trong code.
+- `risc0`, `sp1`, `jolt` cho zkVM — viết Rust thuần, được prove tự động.
+
+Quan trọng hơn: **hầu hết các zk-rollup production đều có prover viết
+bằng Rust**. zkSync Era, Scroll, Polygon zkEVM, StarkNet — tất cả. Học
+ZK qua Rust là học thẳng vào nơi công nghiệp đang chạy, không phải qua
+một ngõ tắt rồi sau này phải học lại.
+
+Tất nhiên, đánh đổi là learning curve dốc hơn. Bạn không có cú pháp gọn
+như Circom. Bạn phải hiểu trait, lifetime, generic.
+
+Và đây là chỗ tôi muốn nói thẳng: **tôi không phải dev Rust**. Hằng ngày
+tôi viết Go. Tôi vào blog này với hai thứ phải học cùng lúc — Rust (ngôn
+ngữ) và ZKP (chủ đề). Mỗi bài bạn đọc, tôi thường mất gấp đôi thời gian:
+một nửa cho toán/khái niệm, một nửa để Rust compiler chấp nhận code của
+mình. Thỉnh thoảng bạn sẽ thấy tôi giải thích Rust kiểu *"trait là
+interface có generic"* hay *"lifetime là cách compiler thay GC bằng kiểm
+tra static"* — không hẳn đúng theo nghĩa hàn lâm, nhưng đủ để cảm. Đó
+là cách tôi tự dùng để qua được giai đoạn fight-the-borrow-checker.
+
+Nếu bạn cũng từ Go (hoặc TS, Python) qua, có lẽ những phép so sánh ấy
+cũng giúp được bạn. Nếu bạn đã là dev Rust kỳ cựu — vui lòng bỏ qua, hoặc
+góp ý chỗ nào tôi viết sai.
+
+## Lộ trình 6 giai đoạn
+
+Tôi đi tuần tự, không bỏ bước:
+
+1. **Toán nền tảng** *(bạn đang ở đây)* — finite fields, elliptic curves,
+   polynomials, hash, Fiat-Shamir. Không có toán này thì mọi thứ phía sau
+   chỉ là magic.
+2. **ZK fundamentals** — Schnorr, Pedersen, KZG, sumcheck. Đây là lúc
+   "zero-knowledge" thực sự xuất hiện.
+3. **Arithmetization** — biến chương trình thành ngôn ngữ ZK hiểu được:
+   R1CS, QAP, Plonkish, AIR.
+4. **Modern proof systems** — Groth16 → PLONK → Bulletproofs → STARKs →
+   Halo2 → Nova. Phần dày nhất.
+5. **Code thực tế với arkworks** — circuit, gadget, end-to-end zkSNARK.
+6. **Ứng dụng blockchain** — rollups, zkEVMs, zkVMs, privacy.
+
+## Cách đọc blog này
+
+Mỗi bài học có ba phần:
+
+- **Phần khái niệm** — định nghĩa, intuition, ví dụ cụ thể.
+- **Phần chứng minh** — vì sao điều đó đúng. Tôi cố không skip proof,
+  vì proof chính là chỗ "magic" biến mất.
+- **Phần code Rust** — bài tập bạn có thể gõ theo, có test để tự kiểm tra.
+
+Bạn không cần đọc liền mạch. Mỗi bài có thể đứng độc lập tương đối, nhưng
+nếu đi theo thứ tự thì các khái niệm sẽ build lên nhau gọn gàng hơn.
+
+## Cam kết với bản thân
+
+- Mỗi tuần ít nhất một bài viết — kể cả khi không biết gì mới, viết lại
+  những gì đã loay hoay.
+- Code tất cả trong public repo, kèm test.
+- Khi bí, ghi rõ *"tôi đang bí ở đây"* thay vì viết kiểu giáo trình.
+
+Bài tiếp theo, chúng ta sẽ bắt đầu từ thứ tưởng như đơn giản nhất — phép
+chia có dư. Nhưng hóa ra đó là viên gạch đầu tiên của toàn bộ thế giới
+ZK. Hẹn gặp lại ở **Số học modular**.

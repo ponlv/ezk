@@ -1,0 +1,40 @@
+{
+  "order": 4,
+  "title": "Modern Proof Systems",
+  "subtitle": "Groth16, PLONK, Bulletproofs, STARKs, Halo2, Nova",
+  "duration": "4-6 tuần",
+  "summary": "Phần dày nhất của lộ trình. Đi tuần tự: Groth16 → PLONK → Bulletproofs → STARKs → Halo2/IPA → Nova/SuperNova. Mỗi hệ thống có trade-off riêng về trusted setup, proof size, prover time, và post-quantum.",
+  "topics": [
+    "Groth16: SNARK phổ biến nhất, proof nhỏ nhất, trusted setup per-circuit",
+    "PLONK: universal trusted setup, KZG-based, nền tảng nhiều hệ thống hiện đại",
+    "Bulletproofs: không trusted setup, range proofs (Monero)",
+    "STARKs: post-quantum, no trusted setup, scalable, FRI",
+    "Halo2/IPA: recursive proofs",
+    "Nova/SuperNova: folding schemes — trend nóng nhất hiện nay"
+  ],
+  "tools": [
+    "ark-groth16",
+    "ark-plonk",
+    "bulletproofs",
+    "winterfell",
+    "plonky3",
+    "halo2_proofs",
+    "nova-snark",
+    "plonky2"
+  ],
+  "resources": [
+    {
+      "title": "ZK MOOC Berkeley",
+      "url": "https://zk-learning.org/",
+      "note": "miễn phí, cover phần này rất tốt, có Rust labs"
+    },
+    {
+      "title": "Electric Coin Co. blog (Halo2)",
+      "url": "https://electriccoin.co/blog/"
+    },
+    {
+      "title": "Microsoft Research crypto blog (Nova family)",
+      "url": "https://www.microsoft.com/en-us/research/blog/"
+    }
+  ]
+}

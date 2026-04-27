@@ -1,0 +1,35 @@
+{
+  "order": 1,
+  "title": "Toán học nền tảng",
+  "subtitle": "Modular arithmetic, finite fields, elliptic curves, polynomials",
+  "duration": "2-3 tuần",
+  "summary": "ZK dựa nặng vào toán học nhưng không cần PhD. Tập trung vào Z/pZ, group theory, BN254/BLS12-381, polynomials trên finite fields, và Fiat-Shamir transform. Implement from scratch để hiểu sâu, chưa dùng arkworks.",
+  "topics": [
+    "Modular arithmetic và finite fields Fp với p nguyên tố lớn",
+    "Group theory cơ bản: cyclic groups, generators, discrete log problem",
+    "Elliptic curves: BN254 (alt_bn128) và BLS12-381",
+    "Polynomials trên finite fields, Lagrange interpolation",
+    "Hash functions và Fiat-Shamir transform"
+  ],
+  "tools": [
+    "num-bigint",
+    "sha2",
+    "rand",
+    "from scratch"
+  ],
+  "resources": [
+    {
+      "title": "An Introduction to Mathematical Cryptography (Hoffstein)",
+      "note": "sách nền tảng số học và mật mã"
+    },
+    {
+      "title": "Pairings for Beginners (Costello), chương 1-3",
+      "note": "elliptic curves và pairings"
+    },
+    {
+      "title": "The Rust Book, chương 1-10",
+      "url": "https://doc.rust-lang.org/book/",
+      "note": "nếu chưa quen Rust"
+    }
+  ]
+}

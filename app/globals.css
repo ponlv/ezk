@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-zinc-950 text-zinc-100 antialiased;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+::selection {
+  @apply bg-rust-500/30 text-rust-100;
+}
+
+/* shiki dual-theme tokens */
+[data-rehype-pretty-code-figure] pre {
+  @apply overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/80 px-0 py-4 text-sm leading-relaxed;
+}
+
+[data-rehype-pretty-code-figure] pre code {
+  @apply grid;
+  counter-reset: line;
+}
+
+[data-rehype-pretty-code-figure] pre [data-line] {
+  @apply border-l-2 border-l-transparent px-4;
+}
+
+[data-rehype-pretty-code-figure] pre [data-highlighted-line] {
+  @apply border-l-rust-500 bg-rust-500/10;
+}
+
+[data-rehype-pretty-code-figure] pre [data-line]::before {
+  counter-increment: line;
+  content: counter(line);
+  @apply mr-4 inline-block w-4 text-right text-zinc-600;
+}
+
+[data-rehype-pretty-code-title] {
+  @apply -mb-2 rounded-t-lg border border-b-0 border-zinc-800 bg-zinc-900 px-4 py-2 font-mono text-xs text-zinc-400;
+}
+
+[data-rehype-pretty-code-figure] code[data-line-numbers-max-digits="2"] [data-line]::before {
+  width: 1.5rem;
+}
+
+/* inline code */
+:not(pre) > code {
+  @apply rounded bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[0.875em] text-rust-300;
+}
+
+/* anchor headings */
+.anchor {
+  @apply ml-2 text-zinc-600 opacity-0 transition group-hover:opacity-100;
+}
+
+/* Thin custom scrollbar — applied via class="scrollbar-thin".
+   Default browser scrollbar is too thick for narrow sidebars (TOC). */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(63 63 70 / 0.5) transparent; /* zinc-700/50 thumb, transparent track */
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(63 63 70 / 0.5); /* zinc-700/50 */
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(82 82 91); /* zinc-600 */
+}
+
+/* KaTeX dark-theme tweaks */
+.katex {
+  @apply text-zinc-100;
+  font-size: 1.05em;
+}
+.katex-display {
+  @apply my-4 overflow-x-auto overflow-y-hidden rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-3;
+}
+.katex-display > .katex {
+  @apply text-zinc-50;
+}
+/* prevent prose from messing with KaTeX spacing */
+.prose .katex-display {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}

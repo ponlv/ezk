@@ -1,0 +1,29 @@
+---
+order: 5
+title: "Pairings — cây cầu giữa hai thế giới"
+description: "Bilinear map e(G1, G2) → GT, intuition của Weil/Tate pairing, vì sao pairings là phép thuật cho phép verify Groth16 trong ba phép tính. Đây là intro — deep dive ở module 2."
+date: "2026-05-02"
+tags: ["math", "pairings", "elliptic-curves"]
+draft: false
+---
+
+> Bài này đang được biên soạn. Phần dưới là outline — nội dung chi tiết
+> sẽ bổ sung sau.
+
+## Sẽ học gì trong bài này
+
+- **Định nghĩa: bilinear pairing** — `e: G_1 × G_2 → G_T`, ba tính
+  chất bilinear / non-degenerate / computable.
+- **Vì sao bilinearity = phép thuật** — scalar `a, b` "chui" ra ngoài
+  thành lũy thừa, cho phép verify scalar relation qua group element.
+- **Trực giác: pairing ép mọi thứ vào field "khổng lồ"** — `G_T = F_(p^k)*`,
+  embedding degree `k`.
+- **Ba "loại" pairing** — Type 1, 2, 3; vì sao Type 3 (BN254, BLS12-381)
+  là chuẩn hiện đại.
+- **Một vài identity quan trọng** — `e(P + P', Q) = e(P, Q) · e(P', Q)`,
+  `e(𝒪, Q) = 1`, ...
+- **Vì sao pairing-based SNARK phổ biến** — Groth16 verify chỉ 3 pairing,
+  proof ~200 byte; trade-off với trusted setup.
+- **Code: ta sẽ chưa implement pairing** — Miller's algorithm + final
+  exponentiation phức tạp; module 2 sẽ dùng `ark-bn254`.
+- **Bài tập (giấy bút)** — pairing-based DH equality check, đọc EIP-197.

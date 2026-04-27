@@ -1,0 +1,29 @@
+---
+order: 7
+title: "Hash & Fiat-Shamir — biến đối thoại thành lá thư"
+description: "Cryptographic hash properties, random oracle model, và phép thuật Fiat-Shamir biến mọi public-coin protocol từ interactive thành non-interactive — mảnh ghép cuối của module toán nền tảng."
+date: "2026-05-04"
+tags: ["math", "hash", "fiat-shamir", "rust"]
+draft: false
+---
+
+> Bài này đang được biên soạn. Phần dưới là outline — nội dung chi tiết
+> sẽ bổ sung sau.
+
+## Sẽ học gì trong bài này
+
+- **Hash cryptographic — bốn tính chất cần biết** — preimage / second
+  preimage / collision resistance / avalanche.
+- **ZK-friendly hashes** — vì sao SHA-256 tốn 27k constraints trong
+  circuit; Poseidon, Rescue, Pedersen rẻ hơn nhiều.
+- **Random Oracle Model (ROM)** — idealization, caveat về
+  ROM-uninstantiable protocols, vì sao caveat này có trong mọi paper.
+- **Fiat-Shamir transform** — Schnorr interactive → non-interactive
+  bằng cách thay verifier challenge `c` bằng `H(transcript)`.
+- **Lưu ý: phải hash *toàn bộ* transcript** — Frozen Heart Attack 2022
+  trên Bulletproofs implementation.
+- **Strong vs Weak Fiat-Shamir** — quy tắc vàng: luôn strong.
+- **Bài tập Rust** — SHA-256 wrapper, hash-to-field với rejection
+  sampling, Schnorr non-interactive end-to-end, dùng `merlin` transcript.
+- **Khép lại module 1** — tổng kết 7 bài, chuẩn bị cho module 2 (ZK
+  Fundamentals) sẽ implement Schnorr trên elliptic curve thật + KZG.

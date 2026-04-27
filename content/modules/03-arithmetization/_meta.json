@@ -1,0 +1,32 @@
+{
+  "order": 3,
+  "title": "Arithmetization",
+  "subtitle": "R1CS, QAP, Plonkish, AIR — biến chương trình thành ZK-friendly",
+  "duration": "2-3 tuần",
+  "summary": "Đây là bước biến chương trình thành thứ ZK hiểu được. R1CS (dùng trong Groth16), QAP (Quadratic Arithmetic Programs), Plonkish arithmetization với custom gates (PLONK), và AIR — Algebraic Intermediate Representation cho STARKs.",
+  "topics": [
+    "R1CS — Rank-1 Constraint System",
+    "QAP — Quadratic Arithmetic Programs",
+    "Plonkish arithmetization và custom gates",
+    "AIR — Algebraic Intermediate Representation cho STARKs"
+  ],
+  "tools": [
+    "ark-relations",
+    "ark-r1cs-std",
+    "halo2_proofs",
+    "winterfell",
+    "plonky3"
+  ],
+  "resources": [
+    {
+      "title": "Vitalik: QAPs from Zero to Hero",
+      "url": "https://medium.com/@VitalikButerin/quadratic-arithmetic-programs-from-zero-to-hero-f6d558cea649",
+      "note": "blog series xuất sắc"
+    },
+    {
+      "title": "0xPARC ZK MOOC",
+      "url": "https://zk-learning.org/",
+      "note": "có lab Rust"
+    }
+  ]
+}
