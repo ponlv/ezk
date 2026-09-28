@@ -60,6 +60,12 @@ function SiteHeader() {
             Modules
           </Link>
           <Link
+            href="/puzzles"
+            className="text-zinc-300 transition hover:text-rust-400"
+          >
+            Puzzle
+          </Link>
+          <Link
             href="/about"
             className="text-zinc-300 transition hover:text-rust-400"
           >

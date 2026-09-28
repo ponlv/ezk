@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "gen:puzzles": "node scripts/generate-puzzles.mts"
   },
   "dependencies": {
     "next": "^15.5.0",
