@@ -60,17 +60,8 @@ export default function PuzzlesPage() {
       <section className="space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-xl font-semibold text-zinc-100">Danh sách</h2>
-          <p className="font-mono text-xs text-zinc-600">
-            sinh ngày {generatedAt} · {rows.length} ví
-          </p>
+         
         </div>
-        <p className="max-w-3xl text-sm text-zinc-500">
-          Cột <span className="text-zinc-400">Chi phí</span> là số phép toán
-          nhóm kỳ vọng của Pollard kangaroo khi đã biết public key —{" "}
-          <span className="font-mono text-zinc-400">2^((n−1)/2 + 1)</span>. Ví
-          bậc 66 chỉ tốn {pow2Label(33.5)} phép; bậc 130 tốn {pow2Label(65.5)};
-          bậc 200 tốn {pow2Label(100.5)}.
-        </p>
         <PuzzleList rows={rows} />
       </section>
 
