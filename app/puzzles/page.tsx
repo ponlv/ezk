@@ -48,9 +48,12 @@ export default function PuzzlesPage() {
           <span className="font-mono text-zinc-300">≈2√W</span> phép toán nhóm.
           Mất đúng một nửa số bit.
         </RuleCard>
-        <RuleCard title="Private key">
-          Sinh bằng CSPRNG của OS, giữ offline, không có trong repo cũng không
-          có đường nào từ web chạm tới. Số dư các ví hiện tại là 0.
+        <RuleCard title="Giải được thì sao">
+          Bấm <span className="font-mono">nhập khoá</span> ở bài tương ứng, dán
+          private key vào. Trang tự tính{" "}
+          <span className="font-mono">k·G</span> và so với public key đã công
+          bố — khoá không rời khỏi máy bạn. Bài nào khớp thì được ghi lại làm
+          tiến độ.
         </RuleCard>
       </section>
 
@@ -71,18 +74,29 @@ export default function PuzzlesPage() {
         <PuzzleList rows={rows} />
       </section>
 
-      <footer className="border-t border-zinc-800/80 pt-6 text-sm text-zinc-500">
+      <footer className="space-y-2 border-t border-zinc-800/80 pt-6 text-sm text-zinc-500">
+        <p>
+          Private key của 200 ví sinh bằng CSPRNG của hệ điều hành và giữ
+          offline — không có trong repo, không có đường nào từ web chạm tới. Số
+          dư các ví hiện tại là 0.
+        </p>
         <p>
           Dữ liệu công khai nằm ở{" "}
           <code className="font-mono text-xs text-zinc-400">
             content/puzzles/wallets.json
           </code>
-          . Tự kiểm tra một ví: giải nén public key, xác nhận nó nằm trên
+          . Tự kiểm tra một dòng: giải nén public key, xác nhận nó nằm trên
           secp256k1, băm{" "}
           <code className="font-mono text-xs text-zinc-400">
             RIPEMD160(SHA256(pubkey))
           </code>{" "}
           rồi base58check ra đúng address trong bảng.
+        </p>
+        <p>
+          Tiến độ lưu bằng{" "}
+          <code className="font-mono text-xs text-zinc-400">localStorage</code>{" "}
+          của riêng trình duyệt này: không có server, không bảng xếp hạng, đổi
+          máy là mất. Khoá nào tìm được thì tự lưu thêm ra chỗ khác.
         </p>
       </footer>
     </div>
